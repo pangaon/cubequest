@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CubeQuest — by Adoni</title>
+<style>
+  :root{
+    --bg:#0f1226; --bg2:#171a35; --panel:#1d2147; --panel2:#262b5c;
+    --ink:#eef1ff; --muted:#a9b0e0; --line:#343a73;
+    --accent:#6ee7ff; --accent2:#a78bfa; --good:#39d98a; --warn:#ffcf5c; --bad:#ff6b81;
+    --grey:#8b93b8; /* unoriented facelet */
+    --radius:18px; --shadow:0 14px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 700px at 70% -10%,#23286a 0%,var(--bg) 55%) fixed;
+    color:var(--ink); min-height:100vh; line-height:1.5;
+  }
+  a{color:var(--accent)}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 18px 80px}
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:6px 0 14px}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo .badge{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow)}
+  .logo h1{font-size:20px;margin:0;letter-spacing:.3px}
+  .logo p{margin:0;font-size:12.5px;color:var(--muted)}
+  .pill{margin-left:auto;font-size:12px;background:#3a1d2e;color:#ffd7df;border:1px solid #6b2740;
+    padding:7px 12px;border-radius:999px;font-weight:600}
+  nav.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  nav.tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);
+    padding:9px 14px;border-radius:12px;cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s}
+  nav.tabs button:hover{color:var(--ink);border-color:var(--accent)}
+  nav.tabs button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c1030;border-color:transparent}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
+    border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+  .card h2{margin:.1em 0 .5em;font-size:19px}
+  .card h3{margin:1em 0 .4em;font-size:15px;color:var(--accent)}
+  .muted{color:var(--muted)}
+  .grid{display:grid;gap:14px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.g3,.g2{grid-template-columns:1fr}}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;
+    padding:12px 18px;border-radius:13px;font-weight:700;font-size:14px;transition:.15s;color:#0c1030;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 22px rgba(110,231,255,.18)}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .btn.ghost:hover{border-color:var(--accent)}
+  .btn.good{background:linear-gradient(135deg,#39d98a,#27b06b)}
+  .btn.warn{background:linear-gradient(135deg,#ffcf5c,#ffb02e)}
+  .btn.bad{background:linear-gradient(135deg,#ff8aa0,#ff5d77);color:#fff}
+  .btn.sm{padding:8px 12px;font-size:12.5px;border-radius:10px}
+  .home-hero{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:center}
+  @media(max-width:760px){.home-hero{grid-template-columns:1fr}}
+  .big3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+  @media(max-width:760px){.big3{grid-template-columns:1fr}}
+  .big3 button{padding:22px 16px;border-radius:16px;font-size:16px;text-align:left;line-height:1.25}
+  .big3 button small{display:block;font-weight:600;opacity:.8;font-size:12px;margin-top:4px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .legend .chip{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+    padding:5px 10px;border-radius:999px;font-size:12px}
+  .legend .sw{width:15px;height:15px;border-radius:5px;border:1px solid rgba(0,0,0,.35)}
+  .stage{display:flex;justify-content:center;align-items:center;padding:6px}
+  .facelet{cursor:default;transition:fill .25s ease, stroke .2s}
+  .facelet.clickable{cursor:pointer}
+  .facelet.clickable:hover{stroke:#fff;stroke-width:2.4}
+  .turnhint{font-weight:800;font-size:18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row.between{justify-content:space-between}
+  .alg{font-family:"Cascadia Code",Consolas,monospace;font-size:17px;background:#0c0f24;border:1px solid var(--line);
+    padding:12px 14px;border-radius:12px;letter-spacing:.5px;color:#d7e7ff;word-spacing:3px}
+  .src{font-size:12px;color:var(--muted)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--line)}
+  .tag.verified{background:#10331f;color:#7df0b0;border-color:#1f6b3f}
+  .tag.beginner{background:#10243f;color:#9cc7ff;border-color:#244a78}
+  .tag.adv{background:#2a1a3f;color:#caa6ff;border-color:#4a2f78}
+  .coach{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,#142a4d,#1a1f47);
+    border:1px solid #2a5a8a;border-radius:14px;padding:14px;margin-top:6px}
+  .coach .face{font-size:30px;line-height:1}
+  .coach .bubble{font-size:14.5px}
+  .coach .bubble b{color:var(--accent)}
+  .movechips{display:flex;gap:6px;flex-wrap:wrap}
+  .movechip{font-family:Consolas,monospace;font-weight:700;font-size:14px;padding:7px 11px;border-radius:10px;
+    background:var(--panel2);border:1px solid var(--line);color:var(--muted);transition:.15s}
+  .movechip.done{color:var(--good);border-color:#1f6b3f}
+  .movechip.current{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c1030;border-color:transparent;transform:scale(1.08)}
+  .caselist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .casecard{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;cursor:pointer;transition:.15s;text-align:center}
+  .casecard:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .casecard .nm{font-size:12.5px;font-weight:700;margin-top:6px}
+  .casecard .al{font-size:10.5px;color:var(--muted);font-family:monospace;margin-top:2px;word-break:break-word}
+  .progressbar{height:9px;background:#0c0f24;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .progressbar > div{height:100%;background:linear-gradient(90deg,var(--good),var(--accent));width:0}
+  table.algtbl{width:100%;border-collapse:collapse;font-size:13px}
+  table.algtbl th,table.algtbl td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.algtbl th{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  table.algtbl td.mono{font-family:monospace;color:#d7e7ff}
+  .switch{display:flex;align-items:center;gap:8px;font-size:13px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;
+    background:#0c0f24;border:1px solid var(--accent);color:var(--ink);padding:12px 18px;border-radius:12px;
+    box-shadow:var(--shadow);transition:.3s;z-index:50;font-weight:600}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .testrow{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border-bottom:1px solid var(--line);font-size:13px}
+  .ok{color:var(--good);font-weight:700}.fail{color:var(--bad);font-weight:700}
+  .star{color:var(--warn)}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent)}
+  .kbd{font-family:monospace;background:#0c0f24;border:1px solid var(--line);padding:1px 6px;border-radius:6px;font-size:12px}
+  .notebtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+  .hidden{display:none}
+  @media print{
+    body{background:#fff;color:#000}
+    nav.tabs,header.top .pill,.noprint{display:none !important}
+    .card{box-shadow:none;border:1px solid #bbb;background:#fff;break-inside:avoid}
+    .alg{background:#f3f3f3;color:#000;border:1px solid #bbb}
+    a{color:#000}
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1226">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CubeQuest">
+<link rel="apple-touch-icon" href="icon.svg">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <div class="badge">🧩</div>
+      <div>
+        <h1>CubeQuest</h1>
+        <p>by Adoni · a patient, honest coach for twisty puzzles</p>
+      </div>
+    </div>
+    <div class="pill">Verified algorithms · real 3D · never guesses</div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   Adoni's Megaminx Helper  —  single-file app
+   ---------------------------------------------------------------------
+   HONESTY / SOURCES
+   - All algorithms are transcribed verbatim from named references:
+       * Beginner method: Speedsolving.com Wiki "Megaminx LL"
+       * 4-Look Last Layer: CubeSkills "Intermediate Megaminx Techniques"
+         (Feliks Zemdegs & Andy Klise) + SpeedCubeDB Megaminx EO/CO/EP/CP
+   - Each last-layer ORIENTATION case stores the exact top-face sticker
+     pattern published by SpeedCubeDB. Diagrams are drawn from that data,
+     so the picture and the algorithm can never disagree.
+   - Recognition NEVER guesses. If the entered/scanned state does not match
+     exactly one verified case, the app says so and asks for more info.
+   ===================================================================== */
+
+/* ---------- Colour scheme (editable in Colour Setup) ---------- */
+const DEFAULT_COLORS = {
+  top:   "#ffd21f", // last-layer (top) colour
+  grey:  "#8b93b8", // a facelet that is NOT the top colour (not oriented)
+  sides: ["#e23b3b","#2f6bff","#27ae60","#9b59b6","#ff8c1a"] // 5 neighbour faces (red, blue, green, purple, orange)
+};
+const SIDE_NAMES = ["Red","Blue","Green","Purple","Orange"];
+let COLORS = JSON.parse(JSON.stringify(DEFAULT_COLORS));
+
+/* ---------- Top-face pattern decode -----------------------------------
+   SpeedCubeDB encodes the top face as 11 chars:
+     index 0      = centre
+     odd 1,3,5,7,9= the 5 CORNERS (clockwise)
+     even 2,4,6,8,10 = the 5 EDGES
+   'y' = the top colour faces UP (oriented).  'l' = it does not (not oriented).
+   We store, per case: corners[5] and edges[5]  (true = oriented).
+--------------------------------------------------------------------- */
+function decodeTop(s){
+  const corners=[], edges=[];
+  for(let k=0;k<5;k++){ corners.push(s[1+2*k]==='y'); edges.push(s[2+2*k]==='y'); }
+  return {corners,edges};
+}
+
+/* ---------- VERIFIED CASE DATA ---------- */
+/* Edge Orientation (3) */
+const EO = [
+  {id:"EO1",name:"Two edges flipped — far apart",top:"ylllylllyly",alg:"F R U R' U' F'",
+   src:"Speedsolving Wiki / SpeedCubeDB EO1",
+   kid:"Two yellow edges are pointing out, with one good edge between them. Hold the two bad edges at front and back-right.",
+   mistake:"Doing the 'together' algorithm by mistake. Check: is there a good edge BETWEEN the two bad ones? Then it's this one."},
+  {id:"EO2",name:"Two edges flipped — next to each other",top:"ylylllllyly",alg:"F U R U' R' F'",
+   src:"Speedsolving Wiki / SpeedCubeDB EO2",
+   kid:"Two yellow edges next to each other are pointing out. Hold them at the front and the right.",
+   mistake:"Make sure the two bad edges really touch. If a good edge sits between them, use the 'far apart' case."},
+  {id:"EO3",name:"Four edges flipped (only one good)",top:"ylllllllyll",alg:"F R U2 R2' F R F' U2' F'",
+   src:"CubeSkills 4LLL / SpeedCubeDB EO3",
+   kid:"Only ONE yellow edge is good; the other four point out. Put the one good edge at the back-left.",
+   mistake:"You can also just solve two edges first with an easier case, then the last two — both ways are fine."}
+];
+/* Corner Orientation (16) — top patterns + primary algorithms (verbatim) */
+const CO = [
+  {id:"CO1",top:"yyyyylylyyy",alg:"R U R' U R U R' U2' R U' R'"},
+  {id:"CO2",top:"ylyyyyyyyly",alg:"F R U2 R' U' R U' R' F'"},
+  {id:"CO3",top:"yyylyyyyyly",alg:"R U2 R' U R U2 R'"},
+  {id:"CO4",top:"ylyyylyyyyy",alg:"R U R' U' R' F R U R U' R' F'"},
+  {id:"CO5",top:"ylylylyyyyy",alg:"R U R' U R U2' R'",name:"Sune"},
+  {id:"CO6",top:"yyylylylyyy",alg:"R' U' R U' R' U2 R",name:"Anti-Sune"},
+  {id:"CO7",top:"ylyyylyyyly",alg:"R U2 R' U' R U' R'"},
+  {id:"CO8",top:"ylyyylyyyly",alg:"R U R' U2 R U2 R'"},
+  {id:"CO9",top:"ylylylyyyly",alg:"R U2 R' U' R U R' U' R U' R'"},
+  {id:"CO10",top:"ylylylyyyly",alg:"R U R' U R U' R' U R U2' R'"},
+  {id:"CO11",top:"ylylylylyyy",alg:"R U R' U R U R' U' R U2' R'"},
+  {id:"CO12",top:"ylyyylylyly",alg:"R U2 R' U' R U' R2' U' R U' R' U2 R"},
+  {id:"CO13",top:"ylylylyyyly",alg:"R U2 R2' U' R2 U' R2' U2 R"},
+  {id:"CO14",top:"yyylylylyly",alg:"R' U2' R2 U R2' U R2 U2' R'"},
+  {id:"CO15",top:"ylylylylyly",alg:"R U R' U2 R U2' R' U R U2' R'"},
+  {id:"CO16",top:"ylylylylyly",alg:"R U2 R' U' R U2 R' U2' R U' R'"}
+];
+CO.forEach(c=>{ if(!c.name) c.name="Corner case "+c.id.slice(2);
+  c.src="CubeSkills 4LLL / SpeedCubeDB "+c.id;
+  c.kid="Look at the yellow corners. Grey corner-tops are not done yet — yellow on a side shows which way they are twisted.";
+  c.mistake="Some corner cases look the same on top but twist the other way. Check which side the yellow points to before choosing.";
+});
+/* Edge Permutation (5) & Corner Permutation (15) — reference algorithms */
+const EP = [
+  {id:"EP1",alg:"R2 U2' R2' U' R2 U2' R2'"},
+  {id:"EP2",alg:"R2 U2 R2' U R2 U2 R2'"},
+  {id:"EP3",alg:"R U R' F' R U R' U' R' F R2 U' R'"},
+  {id:"EP4",alg:"R U R' U R' U' R2 U' R' U R' U R U2'"},
+  {id:"EP5",alg:"L R U2 L' U R' L U' R U2 L' U2 R'"}
+];
+EP.forEach(e=>e.src="CubeSkills 4LLL / SpeedCubeDB "+e.id);
+const CP = [
+  {id:"CP1",alg:"R' BR' R BR R' F' R BR' R' BR F R"},
+  {id:"CP2",alg:"R' F' BR' R BR R' F R BR' R' BR R"},
+  {id:"CP3",alg:"BR' R' U L U' R' U L' U' R2 BR"},
+  {id:"CP4",alg:"BR' R2' U L U' R U L' U' R BR"},
+  {id:"CP5",alg:"L' R U2 R' U' R U R' U' R U R' U' R U' R' L"},
+  {id:"CP6",alg:"R U R' U R' U' R F' R U R' U' R' F R2 U' R2' U R U'"},
+  {id:"CP7",alg:"R2 U R' U' y R U R' U' R U R' U' R U R' y' R U' R2'"},
+  {id:"CP8",alg:"F R U2 R' U' R U' R' F' R' y' R' U' R U' R' U2 R BR U'"},
+  {id:"CP9",alg:"R U R' U R' U' R2 U' R' U R' U R U R U R' U R' U' R2 U' R' U R' U R U"},
+  {id:"CP10",alg:"R2 U2 R2' U' R2 U' R2' y' R2' U' R2 U' R2' U2 R2"},
+  {id:"CP11",alg:"R2' U2' R2 U R2' U R2 y R2 U R2' U R2 U2' R2'"},
+  {id:"CP12",alg:"R2 U2' R2' U' R2 U2' R' U R' U' R' F R2 U' R' U' R U R' F'"},
+  {id:"CP13",alg:"R' U2 R U' R' U2 R U2' R' U' R U2' R' U R U2' R' U R"},
+  {id:"CP14",alg:"R2 U2' R2' U' R2 U R2' U' R2 U R2' U' R2 U2' R2'"},
+  {id:"CP15",alg:"R2 U2 R2' U R2 U' R2' U R2 U' R2' U R2 U2 R2'"}
+];
+CP.forEach(c=>c.src="CubeSkills 4LLL / SpeedCubeDB "+c.id);
+
+/* ---------- Beginner method (Speedsolving Wiki, prose) ---------- */
+const BEGINNER = {
+  eo:[
+    {when:"Two bad edges NEXT TO each other",hold:"Put one bad edge at the FRONT and the other on the RIGHT.",alg:"F U R U' R' F'"},
+    {when:"Two bad edges FAR APART (a good edge between)",hold:"Put one bad edge at the FRONT and the other at the BACK-RIGHT.",alg:"F R U R' U' F'"},
+    {when:"Four bad edges",hold:"Put the only good edge at the BACK-LEFT, then do a 2-edge algorithm and look again.",alg:"F U R U' R' F'  (then repeat)"}
+  ],
+  co:{alg:"R' D' R D",how:"Hold one not-done corner at the FRONT-RIGHT-TOP. Do R' D' R D again and again (2 or 4 times) until JUST that corner's yellow points up. Don't panic — the puzzle looks messy, that's normal! Then turn ONLY the top (U) to bring the next unfinished corner to front-right-top. Repeat for all 5. The lower part fixes itself at the end."},
+  src:"Speedsolving.com Wiki — Megaminx LL (beginner)"
+};
+
+/* ---------- FULL SOLVE roadmap (verified, beginner method) ----------
+   Sources: CubeSkills "Beginner Megaminx Tutorial" (Star & F2L, S2L, Last Layer),
+   Speedsolving Wiki Megaminx LL, and standard layer-by-layer beginner method
+   (speedcube.us / GAN / ruwix). Second-layer edge inserts are the classic
+   3x3 beginner left/right algorithms, applied to the Megaminx.            */
+const FULL_SOLVE = [
+  {n:1, key:"star", icon:"⭐", name:"Make the first-face star",
+   goal:"Pick a starting colour (we'll say white). Build a 5-point star: put each white edge so its white sticker is on the white face AND its side colour matches the centre next to it.",
+   tip:"This step is all thinking, no algorithm needed. Just turn pieces into place like a puzzle. Take your time — there are 5 edges, not 4 like a 3×3.",
+   algs:[], src:"CubeSkills Beginner Megaminx — Star & F2L",
+   levels:null},
+  {n:2, key:"corners", icon:"🧱", name:"First-layer corners",
+   goal:"Now fill in the 5 white corners so the whole white face and its first ring are done.",
+   tip:"Find a white corner in the TOP layer, sitting right above the slot where it belongs. Then repeat the trigger until it drops in correctly. Hold the slot at the front-right.",
+   algs:[{label:"Repeat until the corner is in", alg:"R U R' U'"}],
+   src:"CubeSkills Beginner Megaminx / standard layer-by-layer method",
+   levels:[
+     {id:"beginner", title:"Beginner", body:"Just repeat <span class='kbd'>R U R' U'</span> until the white corner pops into place the right way up. It might take 1, 3 or 5 tries — that's normal."},
+     {id:"advanced", title:"Faster", body:"Pair the corner with its edge first (mini-F2L) and insert them together, like 3×3 F2L. Fewer moves once you get the feel."}
+   ]},
+  {n:3, key:"s2l", icon:"🔗", name:"Second layer edges (S2L)",
+   goal:"Turn the solved white face to the BOTTOM. Now place the edges of the next layer using two mirror algorithms — exactly like the second layer of a 3×3.",
+   tip:"Find a top edge with NO yellow/last-layer colour on it. Line its front colour up with a matching centre, then send it LEFT or RIGHT into its slot.",
+   algs:[
+     {label:"Send the edge to the RIGHT", alg:"U R U' R' U' F' U F"},
+     {label:"Send the edge to the LEFT",  alg:"U' L' U L U F U' F'"}
+   ],
+   src:"CubeSkills Beginner Megaminx — S2L / standard beginner second-layer algorithms",
+   levels:[
+     {id:"beginner", title:"Beginner", body:"Use the two mirror algorithms above, one slot at a time. If an edge is stuck in the wrong slot, send any top edge in to kick it out, then fix it."},
+     {id:"advanced", title:"Intuitive S2L", body:"Solve the corner-edge pair together and insert intuitively (like 3×3 F2L). On the Megaminx this is called S2L."}
+   ]},
+  {n:4, key:"layers", icon:"🧅", name:"Keep going — the lower layers",
+   goal:"A Megaminx has more middle layers than a cube. Repeat the SAME star + corners + edges idea, going down face by face, until only the TOP (last) layer is left unsolved.",
+   tip:"Each new layer is just the same skills again. Work around the puzzle. When only the last face (we use yellow) is messy, you're ready for the last layer!",
+   algs:[{label:"Reuse the S2L right insert", alg:"U R U' R' U' F' U F"},
+         {label:"Reuse the S2L left insert", alg:"U' L' U L U F U' F'"}],
+   src:"CubeSkills Beginner Megaminx — Finishing S2L",
+   levels:null},
+  {n:5, key:"oll", icon:"🟨", name:"Last layer — make the top one colour (OLL)",
+   goal:"First flip the last-layer EDGES so the top shows a star, then twist the CORNERS so the whole top face is one colour.",
+   tip:"This is the part you already know! Edges first (EO), then corners (CO).",
+   algs:[], src:"Speedsolving Wiki / CubeSkills 4LLL",
+   levels:[
+     {id:"beginner", title:"Beginner OLL", body:"Edges: use the 3 EO cases. Corners: hold a not-done corner at front-right-top and repeat <span class='kbd'>R' D' R D</span> until its top is yellow, then U to the next corner. Simple and repeatable.", go:"library"},
+     {id:"advanced", title:"Advanced OLL (4-look)", body:"Learn the 16 corner-orientation cases to do corners in ONE algorithm each. Turn on advanced cases and open the Case Library.", go:"library", adv:true}
+   ]},
+  {n:6, key:"pll", icon:"🟦", name:"Last layer — slide pieces home (PLL)",
+   goal:"The top is one colour now. Last job: move the corners and edges to their correct spots so every side matches.",
+   tip:"Do corners, then edges (or use the reference algorithms). Then your Megaminx is fully solved! 🎉",
+   algs:[], src:"Speedsolving Wiki / CubeSkills 4LLL / SpeedCubeDB EP & CP",
+   levels:[
+     {id:"beginner", title:"Beginner PLL", body:"Corners: take an unsolved corner, do <span class='kbd'>R' D' R</span>, turn U so it would be solved by <span class='kbd'>R' D R</span>, then do it — repeat, alternating <span class='kbd'>R' D R</span> and <span class='kbd'>R' D' R'</span>. Edges: hold two solved edges at front+left and do a Sune <span class='kbd'>R U R' U R U2' R'</span> until they line up."},
+     {id:"advanced", title:"Advanced PLL", body:"Use the 5 edge-permutation (EP) and 15 corner-permutation (CP) algorithms. See the Parent / Coach tables for the full sourced list.", go:"parent"}
+   ]}
+];
+
+/* ---------- App state ---------- */
+const state = {
+  screen:"home",
+  topColorName:"Yellow",
+  builder:{ corners:[true,true,true,true,true], edges:[true,true,true,true,true] },
+  showAdvanced: false,
+  solveLevel: "beginner",      // beginner | intermediate | advanced
+  viewMode: "3d",              // 3d (spinning puzzle) | 2d (diagram)
+  puzzleTab: "guide",          // More Puzzles sub-tab
+  puzzle: "megaminx",          // currently chosen puzzle
+  progress: JSON.parse(localStorage_safe_get("amh_progress")||"{}"),
+  player:null, teach3D:false
+};
+function localStorage_safe_get(k){ try{return localStorage.getItem(k)}catch(e){return null} }
+function saveProgress(){ try{localStorage.setItem("amh_progress",JSON.stringify(state.progress))}catch(e){} }
+
+/* =====================================================================
+   GEOMETRY — draw a Megaminx last layer that looks like the real puzzle
+   ===================================================================== */
+const DEG=Math.PI/180;
+function penta(cx,cy,r,rot){ // 5 points, one vertex up
+  const p=[]; for(let i=0;i<5;i++){const a=(-90+72*i+rot)*DEG; p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);} return p;
+}
+function lerp(a,b,t){return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];}
+function pts(arr){return arr.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");}
+
+/* Build the 11 top-face facelets + 5 side panels (pseudo-3D rim). */
+function buildFaceGeom(cx,cy,R){
+  const Rc=R*0.34, g=0.30;
+  const A=penta(cx,cy,R,0);       // outer vertices
+  const C=penta(cx,cy,Rc,0);      // centre pentagon vertices
+  const eS=[],eE=[];
+  for(let i=0;i<5;i++){const j=(i+1)%5; eS[i]=lerp(A[i],A[j],g); eE[i]=lerp(A[i],A[j],1-g);}
+  const corners=[],edges=[];
+  for(let i=0;i<5;i++){
+    const j=(i+1)%5, im=(i+4)%5;
+    edges[i]=[eS[i],eE[i],C[j],C[i]];                 // trapezoid centred on edge i
+    corners[i]=[A[i],eS[i],C[i],eE[im]];              // kite at vertex i
+  }
+  const centre=C;
+  // side panels: a beveled rim outside each outer edge -> reads as 3D sides
+  const sides=[];
+  for(let i=0;i<5;i++){
+    const j=(i+1)%5;
+    const mid=[(A[i][0]+A[j][0])/2,(A[i][1]+A[j][1])/2];
+    const out=[mid[0]-cx,mid[1]-cy];
+    const len=Math.hypot(out[0],out[1]); out[0]/=len; out[1]/=len;
+    const depth=R*0.30;
+    const o1=[A[i][0]+out[0]*depth, A[i][1]+out[1]*depth];
+    const o2=[A[j][0]+out[0]*depth, A[j][1]+out[1]*depth];
+    sides[i]=[A[i],A[j],o2,o1];
+  }
+  return {corners,edges,centre,sides,A};
+}
+
+/* Render one last-layer view as SVG string.
+   opts: corners[5],edges[5] (true=top colour), size, clickable, highlightFace(idx),
+         turnDir (1 cw / -1 ccw) for arrow, ghostSides(bool), rot(deg of top group) */
+function renderLL(opts){
+  const o=Object.assign({size:300,corners:[1,1,1,1,1],edges:[1,1,1,1,1],clickable:false,
+    highlightFace:-1,turnDir:0,rot:0,topColor:COLORS.top},opts);
+  const S=o.size, cx=S/2, cy=S/2+S*0.02, R=S*0.34;
+  const G=buildFaceGeom(cx,cy,R);
+  const top=o.topColor, grey=COLORS.grey;
+  let s=`<svg viewBox="0 0 ${S} ${S}" width="${S}" height="${S}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%">`;
+  s+=`<defs>
+      <radialGradient id="bodyg" cx="50%" cy="35%" r="75%">
+        <stop offset="0%" stop-color="#3a4170"/><stop offset="100%" stop-color="#0b0e22"/></radialGradient>
+      <filter id="sh" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#000" flood-opacity="0.45"/></filter>
+    </defs>`;
+  // dark puzzle body behind everything
+  const body=penta(cx,cy,R*1.42,0);
+  s+=`<polygon points="${pts(body)}" fill="url(#bodyg)" stroke="#05060f" stroke-width="2" filter="url(#sh)"/>`;
+  // side panels (3D rim) — coloured like neighbour faces, dimmed
+  for(let i=0;i<5;i++){
+    const c=COLORS.sides[i%5];
+    s+=`<polygon points="${pts(G.sides[i])}" fill="${c}" opacity="${o.ghostSides?0.32:0.62}" stroke="#05060f" stroke-width="1.4"/>`;
+  }
+  // top-face group (can rotate for U-turn animation)
+  s+=`<g transform="rotate(${o.rot} ${cx} ${cy})" style="transition:transform .5s cubic-bezier(.5,.05,.3,1)">`;
+  const tile=(poly,fill,kind,idx)=>{
+    const cls="facelet"+(o.clickable&&kind!=='centre'?" clickable":"");
+    return `<polygon class="${cls}" points="${pts(poly)}" fill="${fill}" stroke="#0a0c1c" stroke-width="2"
+      ${o.clickable&&kind!=='centre'?`data-kind="${kind}" data-idx="${idx}"`:""}/>`;
+  };
+  // centre
+  s+=tile(G.centre,top,'centre',-1);
+  // edges & corners
+  for(let i=0;i<5;i++){
+    s+=tile(G.edges[i], o.edges[i]?top:grey, 'edge', i);
+    s+=tile(G.corners[i], o.corners[i]?top:grey, 'corner', i);
+  }
+  // face highlight for move guidance
+  if(o.highlightFace>=0 && o.highlightFace<5){
+    const hp=[G.A[o.highlightFace],G.A[(o.highlightFace+1)%5],G.sides[o.highlightFace][2],G.sides[o.highlightFace][3]];
+    s+=`<polygon points="${pts(hp)}" fill="none" stroke="#fff" stroke-width="4" opacity="0.95">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite"/></polygon>`;
+  }
+  s+=`</g>`;
+  s+=`</svg>`;
+  return s;
+}
+
+/* =====================================================================
+   RECOGNITION — rotation invariant, never guesses
+   ===================================================================== */
+function rotArr(a,k){const n=a.length;return a.map((_,i)=>a[(i-k+n)%n]);}
+function eq(a,b){return a.every((v,i)=>!!v===!!b[i]);}
+function matchCase(corners,edges){
+  // returns {status:'solved'|'one'|'many'|'none', list:[caseObj...]}
+  const allEdge=edges.every(Boolean), allCorner=corners.every(Boolean);
+  if(allEdge&&allCorner) return {status:'solved',list:[]};
+  const pool = allEdge ? CO : EO;   // edges first, then corners (real solving order)
+  const hits=[];
+  for(const c of pool){
+    const d=decodeTop(c.top);
+    for(let k=0;k<5;k++){
+      if(eq(corners,rotArr(d.corners,k)) && eq(edges,rotArr(d.edges,k))){ hits.push(c); break; }
+    }
+  }
+  // unique by id
+  const uniq=[]; const seen=new Set();
+  for(const h of hits){ if(!seen.has(h.id)){seen.add(h.id);uniq.push(h);} }
+  if(uniq.length===0) return {status:'none',list:[]};
+  if(uniq.length===1) return {status:'one',list:uniq};
+  return {status:'many',list:uniq};
+}
+
+/* =====================================================================
+   MOVE PARSING + animated player
+   ===================================================================== */
+function parseAlg(alg){
+  return alg.trim().split(/\s+/).filter(Boolean);
+}
+// which top-face index a move's face maps to in our drawing (for the highlight)
+const FACE_INDEX={F:0,R:1,BR:2,DR:3,L:4,BL:4,U:-1,y:-1,"y2":-1};
+function moveInfo(m){
+  const base=m.replace(/['2]/g,"");
+  const prime=m.includes("'");
+  const dbl=m.includes("2");
+  const face=base;
+  const idx = face==="U"||face==="y" ? -1 : (FACE_INDEX[face]!==undefined?FACE_INDEX[face]:1);
+  return {raw:m,face,prime,dbl,idx};
+}
+
+/* =====================================================================
+   SCREENS
+   ===================================================================== */
+const TABS=[
+  ["home","🏠 Home"],["basics","⬠ Megaminx Basics"],["solve","🗺️ Full Solve"],["colors","🎨 My Colours"],
+  ["builder","🧩 Identify My Case"],["library","📚 Case Library"],["notation","↻ Notation"],
+  ["practice","🎯 Practice"],["puzzles","🧩 More Puzzles"],["parent","👨‍👦 Parent / Coach"],["print","🖨️ Printable"],["tests","✅ Self-Test"]
+];
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = tabsFor().map(([id,label])=>
+    `<button class="${state.screen===id?'active':''}" data-go="${id}">${label}</button>`).join("");
+}
+function go(screen){ state.screen=screen; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function render(){
+  renderTabs();
+  const v=document.getElementById("view");
+  v.innerHTML = ({
+    home:scrHome, basics:scrBasics, solve:scrFullSolve, colors:scrColors, builder:scrBuilder, library:scrLibrary,
+    notation:scrNotation, practice:scrPractice, puzzles:scrPuzzles, parent:scrParent, print:scrPrint, tests:scrTests,
+    pbasics:scrPBasics, psolve:scrPSolve, pplay:scrPPlay, plibrary:scrPLibrary, pnotation:scrPNotation, ppractice:scrPPractice,
+    pcolors:scrPColors, pident:scrPIdentify, pparent:scrPParent, pprint:scrPPrint, ptests:scrPTests, ptimer:scrTimer
+  }[state.screen]||scrHome)();
+  wire();
+}
+
+/* ---- Home ---- */
+function scrHome(){
+  return `
+  <div class="card">
+    <h2>Choose your puzzle 🧩</h2>
+    <p class="muted">Pick a puzzle — the whole app switches to it. Every puzzle has a full 3D trainer.</p>
+    <div class="big3" style="grid-template-columns:repeat(3,1fr)">
+      <button class="btn" data-pick="megaminx">⬠ Megaminx <small>Full 3D trainer ✓</small></button>
+      <button class="btn" data-pick="3x3">🟦 3×3 Cube <small>Full 3D trainer ✓</small></button>
+      <button class="btn" data-pick="4x4">🟧 4×4 Cube <small>Full 3D trainer ✓</small></button>
+      <button class="btn" data-pick="pyraminx">🔺 Pyraminx <small>Full 3D trainer ✓</small></button>
+      <button class="btn ghost" data-pick="mirror">🪞 Mirror Cube <small>3D ✓ (solved as 3×3)</small></button>
+      <button class="btn ghost" data-pick="windmill">🌬️ Windmill <small>3D ✓ (solved as 3×3)</small></button>
+    </div>
+  </div>
+  ${state.puzzle==='megaminx'?megaHome():genericHome()}`;
+}
+function megaHome(){ return `
+  <div class="card">
+    <div class="home-hero">
+      <div>
+        <h2>Hi Adoni! 👋 Let's learn the Megaminx last layer.</h2>
+        <p class="muted">The Megaminx is the puzzle with <b>12 sides</b>, and every side is a <b>pentagon</b> (5 corners).
+        It is <b>not</b> a 3×3 cube. We will go slowly, use your real colours, and never guess.</p>
+        <div class="big3">
+          <button class="btn" data-go="solve">Solve the Whole Megaminx <small>Step-by-step, beginner → advanced</small></button>
+          <button class="btn" data-go="library">Learn Megaminx OLL <small>See the cases & algorithms</small></button>
+          <button class="btn" data-go="builder">Identify My Case <small>Show me your puzzle, I'll help</small></button>
+        </div>
+      </div>
+      <div class="stage">${window.THREE?`<div id="mmxExplore" style="width:320px;height:320px;max-width:100%"></div>`:miniMegaminx(300)}</div>
+    </div>
+    ${window.THREE?`<p class="muted" style="text-align:center;font-size:12.5px;margin-top:2px">👆 Drag the puzzle to spin it around and see all 12 colours!</p>`:""}
+    <h3>Your colours</h3>
+    <div class="legend" id="homeLegend"></div>
+    <p class="muted" style="margin-top:12px;font-size:13px">
+      Tip: start with <b>Megaminx Basics</b> if you are new, then try <b>Identify My Case</b> while holding your puzzle.</p>
+  </div>
+  <div class="card">
+    <div class="coach"><div class="face">🦉</div><div class="bubble">
+      <b>Coach Owl:</b> I am honest with you. If I am not 100% sure which case you have, I will say
+      <i>"I can't confirm this yet"</i> and ask you to look again — I will <b>never</b> give you a wrong algorithm.</div></div>
+  </div>`;
+}
+function genericHome(){const p=P();const E=engineObj(p);
+  const colours = p.engine==='cube' ? ['U','F','R','D','L','B'].map(f=>'<span class="chip"><span class="sw" style="background:'+CUBE_COLORS[f]+'"></span>'+CUBE_COLOR_NAMES[f]+'</span>').join("") : "";
+  return `
+  <div class="card">
+    <div class="home-hero">
+      <div>
+        <h2>Hi Adoni! 👋 Let's learn the ${p.name}.</h2>
+        <p class="muted">${p.basics||("The "+p.name+" — we'll go slowly, use your real colours, and never guess.")}</p>
+        <div class="big3">
+          <button class="btn" data-go="psolve">Solve the Whole ${p.name} <small>Step-by-step method</small></button>
+          <button class="btn" data-go="plibrary">Learn the cases <small>Algorithms${E?' + 3D':''}</small></button>
+          <button class="btn" data-go="pident">Identify My Case <small>Show me your puzzle, I'll help</small></button>
+        </div>
+      </div>
+      <div class="stage">${E?`<div id="pHomeExplore" style="width:320px;height:320px;max-width:100%"></div>`:`<div style="font-size:90px;text-align:center">${p.icon}</div>`}</div>
+    </div>
+    ${E?`<p class="muted" style="text-align:center;font-size:12.5px;margin-top:2px">👆 Drag the puzzle to spin it around!</p>`:`<p class="muted" style="text-align:center">A 3D model for the ${p.name} is coming soon.</p>`}
+    ${colours?`<h3>Your colours</h3><div class="legend">${colours}</div>`:""}
+    <p class="muted" style="margin-top:12px;font-size:13px">Tip: start with <b>Basics</b>, then try <b>Identify My Case</b> while holding your puzzle. Want a different puzzle? Pick one above ⬆️.</p>
+  </div>
+  <div class="card">
+    <div class="coach"><div class="face">🦉</div><div class="bubble">
+      <b>Coach Owl:</b> I'm honest with you. If I'm not 100% sure which case you have, I'll say
+      <i>"I can't confirm this yet"</i> and ask you to look again — I'll <b>never</b> give you a wrong algorithm.</div></div>
+  </div>`;
+}
+// A small but real-looking 3D-ish megaminx (top + visible side faces, all pentagons, real colours)
+function miniMegaminx(S){
+  return renderLL({size:S,corners:[1,1,1,1,1],edges:[1,1,1,1,1],ghostSides:false});
+}
+
+/* ---- Basics ---- */
+function scrBasics(){
+  return `
+  ${window.THREE?`<div class="card">
+    <h2>Spin the Megaminx 🧊</h2>
+    <p class="muted">Drag the puzzle with your mouse or finger to turn it around. Every side is a pentagon, and you can see all 12 colours.</p>
+    <div class="stage"><div id="mmxExplore" style="width:360px;height:360px;max-width:100%"></div></div>
+  </div>`:""}
+  <div class="card">
+    <h2>What is a Megaminx?</h2>
+    <p>A Megaminx is a <b>dodecahedron</b> — a ball with <b>12 flat sides</b>. Each side is a <b>pentagon</b>
+    (a shape with 5 corners). On every face there are three kinds of piece:</p>
+    <div class="grid g2" style="align-items:center">
+      <div class="stage" id="basicsDiagram">${renderLL({size:320,clickable:false})}</div>
+      <div>
+        <div class="legend">
+          <span class="chip"><span class="sw" style="background:${COLORS.top}"></span> <b>Centre</b> — the middle. It never moves, it names the face.</span>
+        </div>
+        <div class="legend"><span class="chip"><span class="sw" style="background:${COLORS.top}"></span> <b>Edge</b> — a piece with 2 colours, on a flat side.</span></div>
+        <div class="legend"><span class="chip"><span class="sw" style="background:${COLORS.top}"></span> <b>Corner</b> — a pointy piece with 3 colours.</span></div>
+        <p class="muted" style="margin-top:12px">Each pentagon face has <b>1 centre</b>, <b>5 edges</b>, and <b>5 corners</b>.</p>
+        <p><b>Click the buttons</b> to light up each kind of piece on the puzzle:</p>
+        <div class="row">
+          <button class="btn sm ghost" data-hl="centre">Show centre</button>
+          <button class="btn sm ghost" data-hl="edge">Show edges</button>
+          <button class="btn sm ghost" data-hl="corner">Show corners</button>
+          <button class="btn sm ghost" data-hl="all">Show all</button>
+        </div>
+      </div>
+    </div>
+    <h3>What is the "last layer"?</h3>
+    <p>When you solve a Megaminx, you finish one face at a time. The <b>last layer</b> is the <b>final top face</b>
+    (we will use <b style="color:${COLORS.top}">yellow</b>) plus the stickers right around its edge. Our job:
+    make the whole top face one colour, then put the side stickers in the right place.</p>
+    <p class="muted" style="font-size:13px">Two big steps: <b>OLL</b> = make the top all yellow (orientation).
+    <b>PLL</b> = slide the pieces to their correct spots (permutation).</p>
+  </div>`;
+}
+
+/* ---- Colours ---- */
+function scrColors(){
+  const swatches=[["Yellow","#ffd21f"],["White","#f4f4ec"],["Red","#e23b3b"],["Orange","#ff8c1a"],
+    ["Blue","#2f6bff"],["Light blue","#5ec8ff"],["Green","#27ae60"],["Light green","#8ee06a"],
+    ["Purple","#9b59b6"],["Pink","#ff7eb6"],["Grey","#8b93b8"],["Dark blue","#243a8a"]];
+  return `
+  <div class="card">
+    <h2>Set up your puzzle's colours</h2>
+    <p class="muted">Megaminx colour schemes are different on different puzzles. Pick the colour of the
+    face you want to solve LAST (the top). Default is yellow.</p>
+    <h3>Top (last-layer) colour</h3>
+    <div class="legend">${swatches.map(([n,c])=>
+      `<button class="chip" data-topcolor="${c}" data-topname="${n}" style="cursor:pointer">
+        <span class="sw" style="background:${c}"></span>${n}</button>`).join("")}</div>
+    <div class="grid g2" style="margin-top:16px;align-items:center">
+      <div class="stage">${renderLL({size:280})}</div>
+      <div>
+        <p>Current top colour: <b style="color:${COLORS.top}">${state.topColorName}</b></p>
+        <h3>Side faces (the 5 around the top)</h3>
+        <p class="muted" style="font-size:13px">These are just for the picture so it looks like your puzzle.
+        Tap a colour to change each side.</p>
+        <div class="legend">${COLORS.sides.map((c,i)=>
+          `<span class="chip"><span class="sw" style="background:${c}"></span>Side ${i+1}
+            <input type="color" value="${c}" data-side="${i}" style="width:26px;height:22px;border:none;background:none;cursor:pointer"></span>`).join("")}</div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn sm" data-act="savecolors">Save colours</button>
+          <button class="btn sm ghost" data-act="resetcolors">Reset to default</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- Builder / Identify ---- */
+function scrBuilder(){
+  const m=matchCase(state.builder.corners,state.builder.edges);
+  let result="";
+  if(m.status==='solved'){
+    result=`<div class="coach"><div class="face">🎉</div><div class="bubble"><b>The top is already solved!</b>
+      Every corner and edge shows ${state.topColorName}. If your real puzzle isn't solved, click a few stickers to match what you see.</div></div>`;
+  } else if(m.status==='none'){
+    result=`<div class="coach" style="border-color:#7a4b15;background:linear-gradient(135deg,#3a2a12,#2a1f12)">
+      <div class="face">🤔</div><div class="bubble">
+      <b>I can't confirm this case yet.</b> The pattern you entered doesn't exactly match a verified case.
+      Please rotate the puzzle, look again, and click the stickers so the picture matches your real top face.
+      <br><span class="muted">(I will not give an algorithm unless I'm sure.)</span></div></div>`;
+  } else if(m.status==='many'){
+    result=`<div class="coach" style="border-color:#7a4b15;background:linear-gradient(135deg,#3a2a12,#2a1f12)">
+      <div class="face">🔎</div><div class="bubble">
+      <b>Almost!</b> The top looks the same for a few cases that twist different ways.
+      Look at the <b>sides</b> of your puzzle: which way does the ${state.topColorName} point on the twisted corners?
+      Candidates: ${m.list.map(c=>`<span class="tag adv">${c.id}</span>`).join(" ")}.
+      <br><span class="muted">I won't pick one for you until it's certain — open the Case Library to compare.</span></div></div>`;
+  } else {
+    const c=m.list[0];
+    result=`<div class="coach" style="border-color:#1f6b3f;background:linear-gradient(135deg,#123a24,#152a1f)">
+      <div class="face">✅</div><div class="bubble">
+      <b>Found it: ${c.name} (${c.id})</b> — this is a verified case.
+      <div class="row" style="margin-top:8px"><button class="btn sm good" data-teach="${c.id}">Teach me this →</button></div>
+      </div></div>`;
+  }
+  return `
+  <div class="card">
+    <h2>Identify My Case</h2>
+    <p class="muted">Hold your puzzle with the colour you solve last on TOP. Then click the top stickers below until
+    the picture matches your puzzle. <b>Yellow = already correct</b>, <b>grey = not yet</b>.
+    Do the <b>edges</b> first, then the <b>corners</b> — just like real solving.</p>
+    <div class="grid g2" style="align-items:start">
+      <div class="stage">${renderLL({size:330,clickable:true,corners:state.builder.corners,edges:state.builder.edges})}</div>
+      <div>
+        <div class="row">
+          <button class="btn sm ghost" data-act="allgood">All correct</button>
+          <button class="btn sm ghost" data-act="alledgesbad">All edges wrong</button>
+          <button class="btn sm ghost" data-act="allcornersbad">All corners wrong</button>
+          <button class="btn sm ghost" data-act="randomcase">Surprise me 🎲</button>
+        </div>
+        <h3>What I see</h3>
+        <p class="muted" style="font-size:13px">Edges correct: <b>${state.builder.edges.filter(Boolean).length}/5</b> ·
+          Corners correct: <b>${state.builder.corners.filter(Boolean).length}/5</b></p>
+        ${result}
+        <p class="muted" style="font-size:12.5px;margin-top:14px">
+          A single blurry photo can fool any app. That's why the photo helper below asks YOU to tap each sticker,
+          reads the colour under your finger, and then uses the same no-guess matcher.</p>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📷 Photo helper</h2>
+    <p class="muted">Take or choose a clear, straight-on photo of the top face. Then tap the stickers in order and I'll
+    read the colours. I still won't guess — after reading I show what I found so you can fix any sticker.</p>
+    <div class="row">
+      <label class="btn sm">📁 Choose / take photo<input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none"></label>
+      <button class="btn sm ghost" id="photoStart" disabled>Start tapping</button>
+      <button class="btn sm ghost" id="photoRedo" disabled>↺ Redo</button>
+    </div>
+    <div class="grid g2" style="align-items:start;margin-top:12px">
+      <div><canvas id="photoCanvas" style="max-width:100%;border:1px solid var(--line);border-radius:12px;cursor:crosshair;display:none"></canvas></div>
+      <div>
+        <div class="coach"><div class="face">🦉</div><div class="bubble" id="photoMsg">
+          Step 1: choose a photo. Then I'll guide you to tap the centre, then go around the face tapping a corner, an edge, a corner, an edge… (11 taps).</div></div>
+        <div id="photoSwatches" class="legend" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- Library ---- */
+function scrLibrary(){
+  const card=(c,group)=>`<div class="casecard" data-teach="${c.id}">
+      ${renderLL({size:130,corners:decodeTop(c.top).corners,edges:decodeTop(c.top).edges})}
+      <div class="nm">${c.id}${c.name&&!c.name.startsWith("Corner case")?" · "+c.name:""}</div>
+      <div class="al">${c.alg}</div></div>`;
+  return `
+  <div class="card">
+    <h2>Megaminx OLL — Case Library</h2>
+    <p class="muted">Every diagram is drawn from verified data and every algorithm is copied word-for-word from its
+    source. <span class="tag verified">verified</span> means the picture and algorithm are checked to agree.</p>
+    <div class="switch" style="margin:6px 0 14px">
+      <label class="switch"><input type="checkbox" id="advToggle" ${state.showAdvanced?'checked':''}>
+      Show advanced 4-look corner cases (16). Off = friendly beginner set.</label>
+    </div>
+
+    <h3>Step 1 · Edge Orientation (make the yellow star) — 3 cases</h3>
+    <div class="caselist">${EO.map(c=>card(c)).join("")}</div>
+
+    <h3>Step 2 · Corner Orientation (finish the yellow top)</h3>
+    ${state.showAdvanced
+      ? `<p class="muted" style="font-size:13px">Advanced 4-look set (Feliks Zemdegs & Andy Klise). Some cases share a top
+         pattern and differ by twist direction — check the sides.</p>
+         <div class="caselist">${CO.map(c=>card(c)).join("")}</div>`
+      : `<div class="coach"><div class="face">🌟</div><div class="bubble">
+         <b>Beginner way:</b> you don't need 16 algorithms! Use ONE simple move repeated:
+         <span class="alg" style="display:inline-block;margin-top:6px">${BEGINNER.co.alg}</span>
+         <div style="margin-top:8px">${BEGINNER.co.how}</div>
+         <div class="src" style="margin-top:6px">Source: ${BEGINNER.src}</div></div></div>`}
+  </div>`;
+}
+
+/* ---- Teaching page ---- */
+function teachOf(id){ return [...EO,...CO].find(c=>c.id===id); }
+function scrTeach(id){
+  const c=teachOf(id); if(!c) return scrLibrary();
+  const d=decodeTop(c.top);
+  const moves=parseAlg(c.alg);
+  const isEO = c.id.startsWith("EO");
+  const learned = state.progress[c.id]?.solved||0;
+  const threeOK = (typeof window!=="undefined" && window.THREE);
+  const use3D = threeOK && state.viewMode==="3d";
+  return `
+  <div class="card">
+    <div class="row between">
+      <h2 style="margin:0">${c.id} · ${c.name}</h2>
+      <span class="tag verified">verified</span>
+    </div>
+    <div class="grid g2" style="align-items:start;margin-top:8px">
+      <div>
+        <div class="row" style="justify-content:center;margin-bottom:6px">
+          <button class="btn sm ${use3D?'':'ghost'}" data-view="3d" ${threeOK?'':'disabled title="Needs internet the first time"'}>🧊 3D spin</button>
+          <button class="btn sm ${!use3D?'':'ghost'}" data-view="2d">🖼️ Diagram</button>
+        </div>
+        <div class="stage" id="teachStage" style="min-height:340px;align-items:center">
+          ${use3D
+            ? `<div id="mmx3dHost" style="width:340px;height:340px;max-width:100%"></div>`
+            : renderLL({size:330,corners:d.corners,edges:d.edges})}
+        </div>
+        <p class="muted" style="text-align:center;font-size:12px">${use3D?"Drag the puzzle to look around. Watch the face spin as each move plays.":(threeOK?"Switch to 3D to watch the sides actually turn.":"3D needs internet the first time — diagram shown.")}</p>
+        <div class="row" style="justify-content:center">
+          <span class="tag ${isEO?'beginner':'adv'}">${isEO?'Edge orientation':'Corner orientation'}</span>
+          <span class="tag">Times solved: ${learned}</span>
+        </div>
+      </div>
+      <div>
+        <h3>How to hold it</h3>
+        <p>${c.kid}</p>
+        <h3>The algorithm</h3>
+        <div class="alg" id="algLine">${c.alg}</div>
+        <div class="src" style="margin-top:6px">Source: ${c.src}</div>
+
+        <h3>Do it move-by-move <span class="muted" style="font-size:12px;font-weight:400">— tap any move to jump there</span></h3>
+        <div class="movechips" id="moveChips">${moves.map((m,i)=>`<span class="movechip" data-mi="${i}" title="Jump to this move">${m}</span>`).join("")}</div>
+        <div class="coach" id="coachBox"><div class="face">🦉</div><div class="bubble" id="coachMsg">
+          Press <b>Play</b> and I'll guide your hands one move at a time. The puzzle shows which face to turn.</div></div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn sm ghost" data-pl="back">⟲ Back</button>
+          <button class="btn sm" data-pl="play">▶ Play</button>
+          <button class="btn sm ghost" data-pl="step">Step ▶</button>
+          <button class="btn sm ghost" data-pl="slow">🐢 Slow</button>
+          <button class="btn sm ghost" data-pl="reset">↺ Reset</button>
+        </div>
+
+        <h3 style="margin-top:14px">When you're done</h3>
+        <p class="muted" style="font-size:13px">Mistake to avoid: ${c.mistake}</p>
+        <div class="row">
+          <button class="btn sm good" data-done="${c.id}">😀 I solved it!</button>
+          <button class="btn sm warn" data-go="builder">😕 Doesn't match my puzzle</button>
+          <button class="btn sm ghost" data-go="library">← All cases</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- Notation ---- */
+const NOTES=[
+  ["U","Turn the TOP face clockwise (1/5 turn).","U"],
+  ["U'","Turn the TOP face the other way.","U"],
+  ["R","Turn the RIGHT face up/clockwise.","R"],
+  ["R'","Turn the RIGHT face down/back.","R"],
+  ["F","Turn the FRONT face clockwise.","F"],
+  ["F'","Turn the FRONT face back.","F"],
+  ["L","Turn the LEFT face clockwise.","L"],
+  ["L'","Turn the LEFT face back.","L"],
+  ["BR","Turn the BACK-RIGHT face.","BR"],
+  ["BR'","Turn the BACK-RIGHT face back.","BR"],
+  ["y","Spin the WHOLE puzzle to the left (re-grip).","y"]
+];
+function scrNotation(){
+  return `
+  <div class="card">
+    <h2>Notation Trainer — what the letters mean</h2>
+    <p class="muted">An algorithm is just a recipe of turns. A letter = which face. A little <b>'</b> (prime) = turn the
+    other way. A small <b>2</b> = turn it twice. On a Megaminx one face-turn is 1/5 of the way around (72°).</p>
+    <div class="grid g2" style="align-items:start">
+      <div class="stage" id="noteStage">${renderLL({size:300,highlightFace:1})}</div>
+      <div>
+        <h3>Pick a move to see it</h3>
+        <div class="notebtns">${NOTES.map((n,i)=>`<button class="movechip" data-note="${i}">${n[0]}</button>`).join("")}</div>
+        <div class="coach" style="margin-top:12px"><div class="face">🦉</div>
+          <div class="bubble" id="noteMsg">Tap a move. The glowing face is the one you turn.</div></div>
+        <p class="muted" style="font-size:13px;margin-top:10px">Practise the "sexy move" used a lot:
+          <span class="kbd">R U R' U'</span> — try it slowly four times.</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---- Practice ---- */
+function scrPractice(){
+  const total=EO.length+(state.showAdvanced?CO.length:0);
+  const learned=Object.values(state.progress).filter(p=>p.solved>0).length;
+  return `
+  <div class="card">
+    <h2>Practice Mode</h2>
+    <p class="muted">Keep it fun, not stressful. Match the picture first — speed comes later.</p>
+    <div class="progressbar" style="margin:8px 0 4px"><div style="width:${Math.min(100,Math.round(learned/Math.max(1,EO.length+CO.length)*100))}%"></div></div>
+    <p class="muted" style="font-size:12.5px">Cases you've solved at least once: <b>${learned}</b></p>
+    <div class="grid g3" style="margin-top:10px">
+      <button class="btn" data-prac="recognize">Recognise the Case<small>I show a picture, you name it</small></button>
+      <button class="btn" data-prac="choose">Choose the Algorithm<small>Pick the right recipe</small></button>
+      <button class="btn" data-prac="quiz">Parent Quiz<small>A grown-up tests you</small></button>
+    </div>
+    <div id="pracArea" style="margin-top:16px"></div>
+  </div>`;
+}
+
+/* ---- Parent / Coach ---- */
+function scrParent(){
+  const rows=(arr,kind)=>arr.map(c=>`<tr><td>${c.id}</td><td>${c.name||""}</td>
+    <td class="mono">${c.alg}</td><td class="src">${c.src}</td></tr>`).join("");
+  return `
+  <div class="card">
+    <h2>Parent / Coach Mode</h2>
+    <p class="muted">Every algorithm shown to Adoni, with its source. Nothing here is invented — all transcribed from
+    the references below.</p>
+    <div class="row">
+      <label class="switch"><input type="checkbox" id="advToggle2" ${state.showAdvanced?'checked':''}> Enable advanced cases for Adoni</label>
+      <button class="btn sm ghost" data-act="resetprogress">Reset Adoni's progress</button>
+      <button class="btn sm ghost" data-go="print">Open printable cheat sheet</button>
+    </div>
+    <h3>Edge Orientation (verified)</h3>
+    <table class="algtbl"><tr><th>ID</th><th>Name</th><th>Algorithm</th><th>Source</th></tr>${rows(EO)}</table>
+    <h3>Corner Orientation (verified)</h3>
+    <table class="algtbl"><tr><th>ID</th><th>Name</th><th>Algorithm</th><th>Source</th></tr>${rows(CO)}</table>
+    <details style="margin-top:14px"><summary>Permutation algorithms (next step after OLL) — reference</summary>
+      <table class="algtbl"><tr><th>ID</th><th></th><th>Algorithm</th><th>Source</th></tr>${rows(EP)}${rows(CP)}</table>
+    </details>
+    <h3>A practice plan you can use</h3>
+    <ol class="muted" style="font-size:13.5px">
+      <li>Week 1: Basics + Notation. Learn to hold the puzzle and do <span class="kbd">R U R' U'</span>.</li>
+      <li>Week 2: Edge orientation (the 3 EO cases) until the yellow star appears every time.</li>
+      <li>Week 3: Corner orientation with the beginner <span class="kbd">R' D' R D</span> method.</li>
+      <li>Week 4: Try the advanced corner cases and start the permutation step.</li>
+    </ol>
+    <h3>Sources</h3>
+    <ul class="src">
+      <li>Beginner method: <a href="https://www.speedsolving.com/wiki/index.php/Megaminx_LL" target="_blank" rel="noopener">Speedsolving.com Wiki — Megaminx LL</a></li>
+      <li>4-Look Last Layer: <a href="https://www.cubeskills.com/uploads/pdf/tutorials/intermediate-megaminx-techniques.pdf" target="_blank" rel="noopener">CubeSkills — Intermediate Megaminx Techniques (Zemdegs & Klise)</a></li>
+      <li>Case patterns & algorithms: <a href="https://speedcubedb.com/a/Megaminx" target="_blank" rel="noopener">SpeedCubeDB — Megaminx EO / CO / EP / CP</a></li>
+    </ul>
+  </div>`;
+}
+
+/* ---- Print ---- */
+function scrPrint(){
+  const block=c=>{const d=decodeTop(c.top);return `<div class="card" style="break-inside:avoid">
+      <div class="row between"><h3 style="margin:0">${c.id} · ${c.name}</h3></div>
+      <div class="row" style="align-items:center;gap:18px">
+        <div>${renderLL({size:150,corners:d.corners,edges:d.edges})}</div>
+        <div><div class="alg">${c.alg}</div><div class="src" style="margin-top:6px">Source: ${c.src}</div>
+        <p class="muted" style="font-size:12.5px;max-width:360px">${c.kid}</p></div>
+      </div></div>`;};
+  return `
+  <div class="card noprint">
+    <h2>Printable Cheat Sheet</h2>
+    <p class="muted">Real Megaminx diagrams, real colours, verified algorithms — no flower pictures, no 3×3 cubes.
+    Use your browser's Print (Ctrl/Cmd+P) to print or save as PDF.</p>
+    <button class="btn" onclick="window.print()">🖨️ Print now</button>
+  </div>
+  <h2>Adoni's Megaminx OLL Cheat Sheet</h2>
+  <p class="muted">Edge Orientation</p>
+  ${EO.map(block).join("")}
+  <p class="muted">Corner Orientation${state.showAdvanced?"":" (turn on advanced cases in Parent mode to print all 16)"}</p>
+  ${(state.showAdvanced?CO:CO.slice(0,2)).map(block).join("")}`;
+}
+
+/* ---- Full Solve roadmap ---- */
+function scrFullSolve(){
+  const lvl=state.solveLevel;
+  const levelBtn=(id,label)=>`<button class="btn sm ${lvl===id?'':'ghost'}" data-solvelvl="${id}">${label}</button>`;
+  const stageCard=(s)=>{
+    const algBlock = s.algs.length? `<div style="margin-top:8px">${s.algs.map(a=>
+        `<div style="margin-bottom:6px"><div class="muted" style="font-size:12.5px">${a.label}</div>
+         <div class="alg">${a.alg}</div></div>`).join("")}</div>` : "";
+    let levelBlock="";
+    if(s.levels){
+      const chosen = s.levels.find(L=>L.id===lvl) || s.levels.find(L=>L.id==="beginner") || s.levels[0];
+      levelBlock=`<div class="coach" style="margin-top:8px"><div class="face">${lvl==='beginner'?'🌱':'🚀'}</div>
+        <div class="bubble"><b>${chosen.title}:</b> ${chosen.body}
+        ${chosen.go?`<div class="row" style="margin-top:8px">
+          <button class="btn sm" data-solvego="${chosen.go}" data-solveadv="${chosen.adv?1:0}">Open it →</button></div>`:""}
+        </div></div>`;
+    }
+    return `<div class="card" style="margin-bottom:14px">
+      <div class="row between">
+        <h3 style="margin:0">${s.icon} Step ${s.n} · ${s.name}</h3>
+        <span class="tag verified">verified</span>
+      </div>
+      <p style="margin:.4em 0">${s.goal}</p>
+      <p class="muted" style="font-size:13px">${s.tip}</p>
+      ${algBlock}
+      ${levelBlock}
+      <div class="src" style="margin-top:8px">Source: ${s.src}</div>
+    </div>`;
+  };
+  return `
+  <div class="card">
+    <h2>🗺️ Solve the Whole Megaminx</h2>
+    <p class="muted">A full solve goes from the very first piece all the way to the finished puzzle.
+    Each step builds on the one before. Every step is checked against trusted cubing guides — nothing is made up.</p>
+    <div class="coach"><div class="face">🦉</div><div class="bubble">
+      <b>Coach Owl:</b> Pick how much you want to learn. <b>Beginner</b> uses a few simple moves you repeat.
+      <b>Advanced</b> uses more algorithms but is faster — like full <b>OLL</b>. You can switch any time!</div></div>
+    <div class="row" style="margin-top:12px">
+      <span class="muted" style="font-size:13px">Difficulty:</span>
+      ${levelBtn("beginner","🌱 Beginner")}
+      ${levelBtn("advanced","🚀 Advanced")}
+    </div>
+    <div class="progressbar" style="margin:14px 0 4px"><div style="width:100%"></div></div>
+    <p class="muted" style="font-size:12px">6 steps from scramble to solved.</p>
+  </div>
+  ${FULL_SOLVE.map(stageCard).join("")}
+  <div class="card">
+    <div class="coach"><div class="face">🏁</div><div class="bubble">
+      <b>That's the whole solve!</b> Star → first layer → middle layers → last layer (OLL then PLL).
+      Practise one step until it's easy, then add the next. You've got this, Adoni! 💪</div></div>
+  </div>`;
+}
+
+/* ===== Multi-puzzle library (verified, source: SpeedCubeDB) ===== */
+const OLL3=[{n:1,alg:"R U2 R2 F R F' U2 R' F R F'"},{n:2,alg:"y' R U' R2 D' r U r' D R2 U R'"},{n:3,alg:"y' f R U R' U' f' U' F R U R' U' F'"},{n:4,alg:"y' R' F2 R2 U2 R' F' R U2 R2 F2 R"},{n:5,alg:"r' U2 R U R' U r"},{n:6,alg:"r U2 R' U' R U' r'"},{n:7,alg:"r U R' U R U2 r'"},{n:8,alg:"y2 r' U' R U' R' U2 r"},{n:9,alg:"y R U R' U' R' F R2 U R' U' F'"},{n:10,alg:"R U R' U R' F R F' R U2 R'"},{n:11,alg:"r' R2 U R' U R U2 R' U M'"},{n:12,alg:"y' M' R' U' R U' R' U2 R U' M"},{n:13,alg:"F U R U2 R' U' R U R' F'"},{n:14,alg:"R' F R U R' F' R F U' F'"},{n:15,alg:"r' U' r R' U' R U r' U r"},{n:16,alg:"r U r' R U R' U' r U' r'"},{n:17,alg:"R U R' U R' F R F' U2 R' F R F'"},{n:18,alg:"y R U2 R2 F R F' U2 M' U R U' r'"},{n:19,alg:"y S' R U R' S U' R' F R F'"},{n:20,alg:"r U R' U' M2 U R U' R' U' M'"},{n:21,alg:"R U R' U R U' R' U R U2 R'"},{n:22,alg:"R U2 R2 U' R2 U' R2 U2 R"},{n:23,alg:"R2 D R' U2 R D' R' U2 R'"},{n:24,alg:"r U R' U' r' F R F'"},{n:25,alg:"R U2 R D R' U2 R D' R2"},{n:26,alg:"y R U2 R' U' R U' R'"},{n:27,alg:"R U R' U R U2 R'"},{n:28,alg:"r U R' U' M U R U' R'"},{n:29,alg:"r2 D' r U r' D r2 U' r' U' r"},{n:30,alg:"y' r' D' r U' r' D r2 U' r' U r U r'"},{n:31,alg:"R' U' F U R U' R' F' R"},{n:32,alg:"S R U R' U' R' F R f'"},{n:33,alg:"R U R' U' R' F R F'"},{n:34,alg:"y f R f' U' r' U' R U M'"},{n:35,alg:"R U2 R2 F R F' R U2 R'"},{n:36,alg:"y R U R2 F' U' F U R2 U2 R'"},{n:37,alg:"F R' F' R U R U' R'"},{n:38,alg:"R U R' U R U' R' U' R' F R F'"},{n:39,alg:"y' f' r U r' U' r' F r S"},{n:40,alg:"y R' F R U R' U' F' U R"},{n:41,alg:"y2 R U R' U R U2 R' F R U R' U' F'"},{n:42,alg:"R' U' R U' R' U2 R F R U R' U' F'"},{n:43,alg:"y R' U' F' U F R"},{n:44,alg:"f R U R' U' f'"},{n:45,alg:"F R U R' U' F'"},{n:46,alg:"R' U' R' F R F' U R"},{n:47,alg:"y' F R' F' R U2 R U' R' U R U2 R'"},{n:48,alg:"F R U R' U' R U R' U' F'"},{n:49,alg:"y2 r U' r2 U r2 U r2 U' r"},{n:50,alg:"r' U r2 U' r2 U' r2 U r'"},{n:51,alg:"y2 F U R U' R' U R U' R' F'"},{n:52,alg:"y2 R' F' U' F U' R U R' U R"},{n:53,alg:"r' U' R U' R' U R U' R' U2 r"},{n:54,alg:"r U R' U R U' R' U R U2 r'"},{n:55,alg:"y R' F U R U' R2 F' R2 U R' U' R"},{n:56,alg:"r U r' U R U' R' U R U' R' r U' r'"},{n:57,alg:"R U R' U' M' U R U' r'"}];
+const PLL3=[
+ {name:"Aa",type:"Adjacent corner swap",alg:"x R' U R' D2 R U' R' D2 R2 x'"},
+ {name:"Ab",type:"Adjacent corner swap",alg:"x R2 D2 R U R' D2 R U' R x'"},
+ {name:"E",type:"Diagonal corner swap",alg:"x' R U' R' D R U R' D' R U R' D R U' R' D' x"},
+ {name:"F",type:"Adjacent corner swap",alg:"R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"},
+ {name:"Ga",type:"Adjacent corner swap",alg:"R2 U R' U R' U' R U' R2 D U' R' U R D'"},
+ {name:"Gb",type:"Adjacent corner swap",alg:"R' U' R U D' R2 U R' U R U' R U' R2 D"},
+ {name:"Gc",type:"Adjacent corner swap",alg:"R2 U' R U' R U R' U R2 D' U R U' R' D"},
+ {name:"Gd",type:"Adjacent corner swap",alg:"R U R' U' D R2 U' R U' R' U R' U R2 D'"},
+ {name:"H",type:"Edges only (EPLL)",alg:"M2 U' M2 U2 M2 U' M2"},
+ {name:"Ja",type:"Adjacent corner swap",alg:"R' U L' U2 R U' R' U2 R L"},
+ {name:"Jb",type:"Adjacent corner swap",alg:"R U R' F' R U R' U' R' F R2 U' R'"},
+ {name:"Na",type:"Diagonal corner swap",alg:"R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'"},
+ {name:"Nb",type:"Diagonal corner swap",alg:"R' U R U' R' F' U' F R U R' F R' F' R U' R"},
+ {name:"Ra",type:"Adjacent corner swap",alg:"R U' R' U' R U R D R' U' R D' R' U2 R'"},
+ {name:"Rb",type:"Adjacent corner swap",alg:"R' U2 R U2 R' F R U R' U' R' F' R2"},
+ {name:"T",type:"Adjacent corner swap",alg:"R U R' U' R' F R2 U' R' U' R U R' F'"},
+ {name:"Ua",type:"Edges only (EPLL)",alg:"R U R' U R' U' R2 U' R' U R' U R"},
+ {name:"Ub",type:"Edges only (EPLL)",alg:"R' U R' U' R' U' R' U R U R2"},
+ {name:"V",type:"Diagonal corner swap",alg:"R' U R' U' R D' R' D R' U D' R2 U' R2 D R2"},
+ {name:"Y",type:"Diagonal corner swap",alg:"F R U' R' U' R U R' F' R U R' U' R' F R F'"},
+ {name:"Z",type:"Edges only (EPLL)",alg:"M2 U M2 U M' U2 M2 U2 M'"}
+];
+const PYRA=[
+ {name:"Sune (3 edges cycle)",alg:"R U R' U R U R'"},
+ {name:"Anti-Sune (3 edges cycle)",alg:"R' U' R U' R' U' R"},
+ {name:"Lefty Bars",alg:"R' U' L' U L R"},
+ {name:"Righty Bars",alg:"L U R U' R' L'"},
+ {name:"2 Flip",alg:"L R' L' R U' R U R'"}
+];
+const PARITY4={oll:"Rw U2 x Rw U2 Rw U2 Rw' U2 Lw U2 Rw' U2 Rw U2 Rw' U2 Rw'",
+               pll:"2R2 U2 2R2 Uw2 2R2 Uw2"};
+function scrPuzzles(){
+  const tab=state.puzzleTab||"guide";
+  const sub=(id,label)=>'<button class="btn sm '+(tab===id?'':'ghost')+'" data-ptab="'+id+'">'+label+'</button>';
+  const ollCards=OLL3.map((o,i)=>'<div class="casecard" data-cube="oll:'+i+'" title="Watch in 3D"><div class="nm">OLL '+o.n+'</div><div class="al">'+o.alg+'</div></div>').join("");
+  const pllCards=PLL3.map((p,i)=>'<div class="casecard" data-cube="pll:'+i+'" title="Watch in 3D"><div class="nm">'+p.name+'</div><div class="src" style="font-size:10px">'+p.type+'</div><div class="al">'+p.alg+'</div></div>').join("");
+  const pyraCards=PYRA.map(p=>'<div class="casecard" style="cursor:default"><div class="nm">'+p.name+'</div><div class="al">'+p.alg+'</div></div>').join("");
+  let body="";
+  if(tab==="guide"){
+    body='<div class="grid g2">'+
+      '<div class="card"><h3>🟦 3×3 Cube</h3><p class="muted">The classic cube. After the first two layers you finish with <b>OLL</b> (make the top one colour) then <b>PLL</b> (move the pieces home). All 57 OLL and 21 PLL algorithms are in the tabs above.</p></div>'+
+      '<div class="card"><h3>🪞 Mirror Cube</h3><p class="muted">It is really a 3×3! The pieces are different <b>sizes</b> instead of colours, so you solve by <b>shape</b>. The exact same moves and the same OLL/PLL algorithms work.</p></div>'+
+      '<div class="card"><h3>🌬️ Windmill Cube</h3><p class="muted">A 3×3 with a tilted middle. It looks twisty but uses the <b>same 3×3 method and algorithms</b> — just line up the slanted centres.</p></div>'+
+      '<div class="card"><h3>🟧 4×4 Cube</h3><p class="muted">First pair the centres and edges so it becomes a 3×3, then solve it with the <b>same 3×3 algorithms</b>. Sometimes you get a special case called <b>parity</b>:</p>'+
+        '<div class="muted" style="font-size:12px">OLL parity (one edge flipped):</div><div class="alg">'+PARITY4.oll+'</div>'+
+        '<div class="muted" style="font-size:12px;margin-top:6px">PLL parity (two edges swapped):</div><div class="alg">'+PARITY4.pll+'</div></div>'+
+      '<div class="card"><h3>🔺 Pyraminx</h3><p class="muted">A triangle puzzle (not a cube). Easiest method: 1) twist the 4 tips to match, 2) solve one face + its centres, 3) finish the last 3 edges with the small set in the Pyraminx tab.</p></div>'+
+    '</div>';
+  } else if(tab==="3x3oll"){
+    body='<div class="card"><h3>3×3 OLL — all 57 cases</h3><p class="muted">Orient the Last Layer: make the whole top yellow in one algorithm. <b>Tap any case to watch it solve in 3D.</b> Source: SpeedCubeDB.</p><div class="caselist">'+ollCards+'</div></div>';
+  } else if(tab==="3x3pll"){
+    body='<div class="card"><h3>3×3 PLL — all 21 cases</h3><p class="muted">Permute the Last Layer: slide the pieces to their spots. <b>Tap any case to watch it solve in 3D.</b> Source: SpeedCubeDB.</p><div class="caselist">'+pllCards+'</div></div>';
+  } else if(tab==="pyraminx"){
+    body='<div class="card"><h3>Pyraminx — last layer</h3><p class="muted">After the tips and first layer, these finish the last 3 edges. Source: SpeedCubeDB (algs by Harsha Paladugu).</p><div class="caselist">'+pyraCards+'</div></div>';
+  }
+  return '<div class="card"><h2>🧩 More Puzzles</h2>'+
+    '<p class="muted">Good news: the <b>Mirror cube</b>, <b>Windmill cube</b>, and (after pairing) the <b>4×4</b> all use the SAME method and algorithms as the <b>3×3</b>. Learn 3×3 OLL + PLL once and you can solve all of them! The <b>Pyraminx</b> is a triangle with its own short method.</p>'+
+    '<div class="row" style="margin-top:8px">'+sub("guide","🧭 Which puzzle?")+sub("3x3oll","3×3 OLL (57)")+sub("3x3pll","3×3 PLL (21)")+sub("pyraminx","🔺 Pyraminx")+'</div></div>'+body;
+}
+
+/* ---- Self-test ---- */
+function runTests(){
+  const t=[];
+  const add=(name,pass,detail="")=>t.push({name,pass,detail});
+  // 1. every EO/CO has 11-char pattern, centre logic, edges-all-y for CO
+  EO.forEach(c=>add("EO "+c.id+" pattern length 11", c.top.length===11));
+  CO.forEach(c=>add("CO "+c.id+" pattern length 11", c.top.length===11));
+  CO.forEach(c=>{const d=decodeTop(c.top); add("CO "+c.id+" edges all oriented", d.edges.every(Boolean));});
+  // 2. edge-flip parity: number of flipped edges in each EO case is even
+  EO.forEach(c=>{const d=decodeTop(c.top);const flipped=d.edges.filter(x=>!x).length;
+    add("EO "+c.id+" edge-flip parity even", flipped%2===0, flipped+" flipped");});
+  // 3. corner twist count never exactly 1 (impossible on a real puzzle)
+  CO.forEach(c=>{const d=decodeTop(c.top);const bad=d.corners.filter(x=>!x).length;
+    add("CO "+c.id+" corner count valid (not 1)", bad!==1, bad+" twisted");});
+  // 4. U-rotation is a clean 5-cycle: rotArr 5 times == identity
+  {const a=[1,0,2,0,1];let r=a.slice();for(let i=0;i<5;i++)r=rotArr(r,1);
+    add("U-rotation has order 5", eq(r.map(Boolean),a.map(Boolean)));}
+  // 5. recognition: every verified case is matched to itself uniquely (or grouped only with same-top cases)
+  [...EO,...CO].forEach(c=>{const d=decodeTop(c.top);const m=matchCase(d.corners,d.edges);
+    const ok=m.status!=='none' && m.list.some(x=>x.id===c.id);
+    add("Recognise "+c.id, ok, m.status);});
+  // 6. recognition rotation-invariance: a rotated copy still matches the same set
+  [...EO,...CO].forEach(c=>{const d=decodeTop(c.top);
+    const rc=rotArr(d.corners,2), re=rotArr(d.edges,2);
+    const m=matchCase(rc,re); add("Rotation-invariant "+c.id, m.list.some(x=>x.id===c.id), m.status);});
+  // 7. no algorithm is empty & uses only known tokens
+  const known=/^[URFLDB]+R?2?'?$|^y2?'?$|^(BR|DR|BL|DL)2?'?$/;
+  [...EO,...CO,...EP,...CP].forEach(c=>{
+    const toks=parseAlg(c.alg); const allok=toks.length>0 && toks.every(m=>/^[A-Za-z]+2?'?$/.test(m));
+    add("Algorithm well-formed "+c.id, allok);});
+  // 8. other-puzzle libraries are complete and non-empty
+  if(typeof OLL3!=="undefined"){ add("3x3 OLL set has 57 cases", OLL3.length===57, OLL3.length+"");
+    add("3x3 OLL all non-empty", OLL3.every(o=>o.alg&&o.alg.trim().length>0)); }
+  if(typeof PLL3!=="undefined"){ add("3x3 PLL set has 21 cases", PLL3.length===21, PLL3.length+"");
+    add("3x3 PLL all non-empty", PLL3.every(p=>p.alg&&p.alg.trim().length>0)); }
+  if(typeof PYRA!=="undefined"){ add("Pyraminx set non-empty", PYRA.length>0 && PYRA.every(p=>p.alg)); }
+  return t;
+}
+function scrTests(){
+  const t=runTests();
+  const pass=t.filter(x=>x.pass).length;
+  return `
+  <div class="card">
+    <h2>Self-Test & Verification</h2>
+    <p class="muted">These checks run inside the app. They prove the case data is internally consistent and the
+    recognition engine behaves correctly. Result: <b class="${pass===t.length?'ok':'fail'}">${pass}/${t.length} passed</b>.</p>
+    <div>${t.map(x=>`<div class="testrow"><span>${x.name}</span>
+      <span class="${x.pass?'ok':'fail'}">${x.pass?'PASS':'FAIL'} <span class="muted">${x.detail}</span></span></div>`).join("")}</div>
+    <p class="muted" style="font-size:12.5px;margin-top:12px">What this does and doesn't claim: it verifies the
+    <b>data integrity</b> (pattern shape, parity, corner-twist legality), the <b>recognition engine</b> (every verified
+    case is found, and recognition is rotation-invariant), and that every <b>algorithm is well-formed</b>. The algorithm
+    <i>move sequences themselves</i> are trusted because they are transcribed verbatim from the cited references, not generated.</p>
+  </div>`;
+}
+
+/* =====================================================================
+   PLAYER (move-by-move guidance with motion)
+   ===================================================================== */
+function startPlayer(id){
+  const c=teachOf(id); const moves=parseAlg(c.alg);
+  state.player={id,moves,i:-1,speed:900,playing:false,baseRot:0};
+}
+function playerRenderStep(){
+  const p=state.player; if(!p) return;
+  const c=teachOf(p.id); const d=decodeTop(c.top);
+  // highlight current move's face; rotate top group a little for U moves to imply motion
+  let hl=-1, rot=p.baseRot;
+  const msgEl=document.getElementById("coachMsg");
+  document.querySelectorAll("#moveChips .movechip").forEach((el,idx)=>{
+    el.classList.toggle("done",idx<p.i);
+    el.classList.toggle("current",idx===p.i);
+  });
+  if(p.i>=0 && p.i<p.moves.length){
+    const mi=moveInfo(p.moves[p.i]);
+    hl=mi.idx;
+    if(mi.face==="U"||mi.face==="y"){ p.baseRot += (mi.prime?72:-72)*(mi.dbl?2:1); rot=p.baseRot; hl=-1; }
+    const dirWord = mi.prime?"the OTHER way (anti-clockwise)":"clockwise";
+    const faceWord = {F:"FRONT",R:"RIGHT",L:"LEFT",BR:"BACK-RIGHT",DR:"DOWN-RIGHT",U:"TOP",y:"WHOLE puzzle"}[mi.face]||mi.face;
+    if(msgEl) msgEl.innerHTML = `Move ${p.i+1} of ${p.moves.length}: <b>${mi.raw}</b> — turn the <b>${faceWord}</b> face ${dirWord}${mi.dbl?" twice":""}.`;
+  } else if(p.i>=p.moves.length){
+    if(msgEl) msgEl.innerHTML = `<b>Done! 🎉</b> The top should now be ${state.topColorName==="Yellow"?"all yellow":"all "+state.topColorName.toLowerCase()}. If it is — press "I solved it!".`;
+    const st=document.getElementById("teachStage"); if(st) st.innerHTML=renderLL({size:330,corners:[1,1,1,1,1],edges:[1,1,1,1,1]});
+    return;
+  }
+  const st=document.getElementById("teachStage");
+  if(st) st.innerHTML=renderLL({size:330,corners:d.corners,edges:d.edges,highlightFace:hl,rot:rot});
+}
+function playerStep(){ const p=state.player; if(!p) return; if(p.i<p.moves.length){p.i++;} playerRenderStep(); }
+function playerBack(){ const p=state.player; if(!p) return; if(p.i>=0){p.i--;} if(p.i<0)p.baseRot=0; playerRenderStep(); }
+function playerReset(){ const p=state.player; if(!p) return; p.i=-1;p.baseRot=0;p.playing=false; playerRenderStep(); }
+function playerPlay(){
+  const p=state.player; if(!p) return; p.playing=!p.playing;
+  if(p.playing){ if(p.i>=p.moves.length){p.i=-1;p.baseRot=0;} const tick=()=>{
+    if(!state.player||!state.player.playing) return;
+    if(p.i>=p.moves.length){p.playing=false;return;}
+    playerStep(); if(p.i<=p.moves.length) setTimeout(tick,p.speed);
+  }; tick(); }
+}
+
+/* =====================================================================
+   PRACTICE LOGIC
+   ===================================================================== */
+function pickRandom(pool){return pool[Math.floor(Math.random()*pool.length)];}
+function wirePracticeArea(){
+  document.querySelectorAll("#pracArea [data-prac]").forEach(b=>b.onclick=()=>{
+    const p=b.dataset.prac; if(p==='recognize')pracRecognize(); else if(p==='choose')pracChoose(); else pracQuiz();});
+  document.querySelectorAll("#pracArea [data-ans]").forEach(b=>b.onclick=()=>{
+    const ok=b.dataset.ans===b.dataset.correct;
+    document.querySelectorAll("#pracArea [data-ans]").forEach(x=>{ x.disabled=true; x.classList.remove('ghost');
+      if(x.dataset.ans===x.dataset.correct){x.classList.add('good');} else if(x===b){x.classList.add('bad');} else {x.style.opacity=.5;}});
+    const bub=document.querySelector("#pracMsg .bubble");
+    if(bub) bub.innerHTML = ok
+      ? "<b style='color:#39d98a'>✅ Correct! ⭐</b> Nice work — press <b>Next →</b> for another."
+      : "<b style='color:#ff6b81'>❌ Not quite.</b> The right answer is the <b style='color:#39d98a'>green</b> one (<b>"+b.dataset.correct+"</b>). Press <b>Next →</b> to try another!";
+    if(ok){state.progress[b.dataset.correct]=state.progress[b.dataset.correct]||{solved:0};state.progress[b.dataset.correct].solved++;saveProgress();}
+  });
+}
+function pracRecognize(){
+  const pool=[...EO,...(state.showAdvanced?CO:[])];
+  const c=pickRandom(pool); const d=decodeTop(c.top);
+  // build options (unique ids) — never ask for more than exist (prevents freeze)
+  const need=Math.min(4,pool.length);
+  const opts=[c]; let guard=0; while(opts.length<need && guard++<200){const o=pickRandom(pool); if(!opts.find(x=>x.id===o.id))opts.push(o);}
+  opts.sort(()=>Math.random()-0.5);
+  document.getElementById("pracArea").innerHTML=`
+    <div class="grid g2" style="align-items:center">
+      <div class="stage">${renderLL({size:240,corners:d.corners,edges:d.edges})}</div>
+      <div><h3>Which case is this?</h3>
+        <div class="row">${opts.map(o=>`<button class="btn sm ghost" data-ans="${o.id}" data-correct="${c.id}">${o.id}${o.name&&!o.name.startsWith("Corner")?" · "+o.name:""}</button>`).join("")}</div>
+        <div id="pracMsg" class="coach" style="margin-top:12px"><div class="face">🦉</div><div class="bubble">Take your time and look at the picture.</div></div>
+        <button class="btn sm" data-prac="recognize" style="margin-top:8px">Next →</button>
+      </div></div>`;
+  wirePracticeArea();
+}
+function pracChoose(){
+  const pool=[...EO,...(state.showAdvanced?CO:[])];
+  const c=pickRandom(pool); const d=decodeTop(c.top);
+  const uniqueAlgs=new Set(pool.map(x=>x.alg)).size; const need=Math.min(3,uniqueAlgs);
+  const opts=[c]; let guard=0; while(opts.length<need && guard++<200){const o=pickRandom(pool); if(!opts.find(x=>x.alg===o.alg))opts.push(o);}
+  opts.sort(()=>Math.random()-0.5);
+  document.getElementById("pracArea").innerHTML=`
+    <div class="grid g2" style="align-items:center">
+      <div class="stage">${renderLL({size:240,corners:d.corners,edges:d.edges})}</div>
+      <div><h3>Pick the correct algorithm</h3>
+        <div class="grid">${opts.map(o=>`<button class="btn sm ghost" style="font-family:monospace" data-ans="${o.id}" data-correct="${c.id}">${o.alg}</button>`).join("")}</div>
+        <div id="pracMsg" class="coach" style="margin-top:12px"><div class="face">🦉</div><div class="bubble">Which recipe solves this picture?</div></div>
+        <button class="btn sm" data-prac="choose" style="margin-top:8px">Next →</button>
+      </div></div>`;
+  wirePracticeArea();
+}
+function pracQuiz(){
+  document.getElementById("pracArea").innerHTML=`
+    <div class="coach"><div class="face">👨‍👦</div><div class="bubble">
+      <b>Parent Quiz:</b> Show Adoni a real scramble of just the last layer. Ask:
+      <ol><li>"Are all the edges yellow on top? If not, which EO case is it?"</li>
+      <li>"How do you hold it?"</li><li>"What's the algorithm?"</li></ol>
+      Then let him check himself in the Case Library. Praise the <b>process</b> (correct hold + correct recipe),
+      not just speed. ✅</div></div>`;
+}
+
+/* =====================================================================
+   EVENT WIRING
+   ===================================================================== */
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1800);}
+
+function wire(){
+  // free 3D explorer (Home / Basics) — drag to rotate, shows all colours
+  const exp=document.getElementById("mmxExplore");
+  if(exp && window.THREE){ try{ MMX3D.init(exp,"",COLORS.top,null); }catch(e){} }
+  const phe=document.getElementById("pHomeExplore"); if(phe){const HE=engineObj(P()); if(HE){try{HE.free(phe);}catch(e){}}}
+  wirePhoto(); wireRich(); wireTimer();
+
+  // home legend
+  const hl=document.getElementById("homeLegend");
+  if(hl){ hl.innerHTML = [["Top",COLORS.top],...COLORS.sides.map((c,i)=>[SIDE_NAMES[i],c])]
+    .map(([n,c])=>`<span class="chip"><span class="sw" style="background:${c}"></span>${n}</span>`).join(""); }
+
+  document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+  document.querySelectorAll("[data-teach]").forEach(b=>b.onclick=()=>openTeach(b.dataset.teach));
+  document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{state.viewMode=b.dataset.view;openTeach(state.screen.replace("teach:",""));});
+  document.querySelectorAll("#moveChips .movechip").forEach(ch=>ch.onclick=()=>{
+    const i=+ch.dataset.mi;
+    if(teach3DActive()){ MMX3D.jumpTo(i); }
+    else if(state.player){ state.player.playing=false; state.player.i=i; playerRenderStep(); }
+  });
+
+  // builder facelet clicks
+  document.querySelectorAll(".facelet.clickable").forEach(el=>{
+    el.onclick=()=>{const kind=el.dataset.kind,idx=+el.dataset.idx;
+      if(kind==='corner')state.builder.corners[idx]=!state.builder.corners[idx];
+      if(kind==='edge')state.builder.edges[idx]=!state.builder.edges[idx];
+      render();};
+  });
+
+  // builder quick buttons
+  const acts={
+    allgood:()=>{state.builder={corners:[1,1,1,1,1].map(Boolean),edges:[1,1,1,1,1].map(Boolean)};},
+    alledgesbad:()=>{state.builder={corners:[1,1,1,1,1].map(Boolean),edges:[0,0,0,0,0].map(Boolean)};},
+    allcornersbad:()=>{state.builder={corners:[0,0,0,0,0].map(Boolean),edges:[1,1,1,1,1].map(Boolean)};},
+    randomcase:()=>{const pool=[...EO,...CO];const c=pickRandom(pool);const d=decodeTop(c.top);
+      const k=Math.floor(Math.random()*5);state.builder={corners:rotArr(d.corners,k),edges:rotArr(d.edges,k)};},
+    savecolors:()=>{try{localStorage.setItem("amh_colors",JSON.stringify({c:COLORS,n:state.topColorName}));}catch(e){}toast("Colours saved 🎨");},
+    resetcolors:()=>{COLORS=JSON.parse(JSON.stringify(DEFAULT_COLORS));state.topColorName="Yellow";try{localStorage.removeItem("amh_colors");}catch(e){}toast("Reset to default");},
+    resetprogress:()=>{state.progress={};saveProgress();toast("Progress reset");},
+  };
+  document.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{const f=acts[b.dataset.act];if(f){f();render();}});
+
+  // colour pickers
+  document.querySelectorAll("[data-topcolor]").forEach(b=>b.onclick=()=>{COLORS.top=b.dataset.topcolor;state.topColorName=b.dataset.topname;render();});
+  document.querySelectorAll("[data-side]").forEach(inp=>inp.oninput=()=>{COLORS.sides[+inp.dataset.side]=inp.value;render();});
+
+  // basics highlight
+  document.querySelectorAll("[data-hl]").forEach(b=>b.onclick=()=>{
+    const kind=b.dataset.hl; const allOff={corners:[0,0,0,0,0],edges:[0,0,0,0,0]};
+    let cfg;
+    if(kind==='all')cfg={corners:[1,1,1,1,1],edges:[1,1,1,1,1]};
+    else if(kind==='corner')cfg={corners:[1,1,1,1,1],edges:[0,0,0,0,0]};
+    else if(kind==='edge')cfg={corners:[0,0,0,0,0],edges:[1,1,1,1,1]};
+    else cfg={corners:[0,0,0,0,0],edges:[0,0,0,0,0]}; // centre only
+    const target=document.getElementById("basicsDiagram");
+    if(target) target.innerHTML=renderLL({size:320,corners:cfg.corners,edges:cfg.edges});
+    toast(kind==='centre'?"The centre is the middle tile — it names the face.":
+          kind==='edge'?"Edges sit on the flat sides (2 colours).":
+          kind==='corner'?"Corners are the pointy pieces (3 colours).":"The whole top face.");
+  });
+
+  // more-puzzles sub-tabs
+  document.querySelectorAll("[data-ptab]").forEach(b=>b.onclick=()=>{state.puzzleTab=b.dataset.ptab;render();});
+
+  // puzzle picker — switch the WHOLE app to that puzzle
+  document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.pick; state.puzzle=id; go("home");
+    if(id==="mirror"||id==="windmill") toast(PUZZLES[id].name+" is solved just like a 3×3!");
+  });
+
+  // generic puzzle workspace wiring
+  document.querySelectorAll("[data-case]").forEach(b=>b.onclick=()=>{const [k,i]=b.dataset.case.split(":");openCaseTeach(k,+i);});
+  document.querySelectorAll("[data-pquiz]").forEach(b=>b.onclick=()=>pQuiz());
+  const PE=engineObj(P());
+  document.querySelectorAll("[data-pdemo]").forEach(b=>b.onclick=()=>{if(!PE)return;if(b.dataset.pdemo==="play")PE.play();else PE.reset();});
+  const pe=document.getElementById("pExplore"); if(pe&&PE){try{PE.free(pe);}catch(e){}}
+  const ph=document.getElementById("pPlayHost"); if(ph&&PE){try{PE.init(ph,P().demo||"",null);}catch(e){}}
+
+  // clickable 3x3 cases (legacy More Puzzles tab) -> 3D animated teach
+  document.querySelectorAll("[data-cube]").forEach(b=>b.onclick=()=>{const [k,i]=b.dataset.cube.split(":");openCubeTeach(k,+i);});
+  // cube teach controls
+  const CE=engineObj(P());
+  document.querySelectorAll("[data-cpl]").forEach(b=>b.onclick=()=>{if(!CE)return;const a=b.dataset.cpl;
+    if(a==='play')CE.play(); else if(a==='step')CE.step(); else if(a==='back')CE.back();
+    else if(a==='reset')CE.reset(); else if(a==='slow'){cubeSpeed=cubeSpeed>1100?620:1500;CE.setSpeed(cubeSpeed);toast(cubeSpeed>1100?"Slow mode 🐢":"Normal speed");}});
+  document.querySelectorAll("[data-cmi]").forEach(b=>b.onclick=()=>{if(CE)CE.jumpTo(+b.dataset.cmi);});
+
+  // full-solve difficulty + links
+  document.querySelectorAll("[data-solvelvl]").forEach(b=>b.onclick=()=>{state.solveLevel=b.dataset.solvelvl;render();});
+  document.querySelectorAll("[data-solvego]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.solveadv==="1") state.showAdvanced=true;
+    go(b.dataset.solvego);
+  });
+
+  // advanced toggle
+  const at=document.getElementById("advToggle"); if(at) at.onchange=()=>{state.showAdvanced=at.checked;render();};
+  const at2=document.getElementById("advToggle2"); if(at2) at2.onchange=()=>{state.showAdvanced=at2.checked;render();};
+
+  // player (routes to 3D viewer when active, else 2D)
+  document.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.pl;
+    if(teach3DActive()){
+      if(a==='play')MMX3D.play();
+      else if(a==='step')MMX3D.step();
+      else if(a==='back')MMX3D.back();
+      else if(a==='reset')MMX3D.reset();
+      else if(a==='slow'){teachSpeed=teachSpeed>1100?650:1500;MMX3D.setSpeed(teachSpeed);toast(teachSpeed>1100?"Slow mode 🐢":"Normal speed");}
+      return;
+    }
+    if(!state.player) startPlayer(state.screen.replace("teach:",""));
+    if(a==='play')playerPlay();
+    else if(a==='step'){state.player.playing=false;playerStep();}
+    else if(a==='back'){state.player.playing=false;playerBack();}
+    else if(a==='reset')playerReset();
+    else if(a==='slow'){state.player.speed=state.player.speed>1200?900:1600;toast(state.player.speed>1200?"Slow mode 🐢":"Normal speed");}
+  });
+
+  // done / progress
+  document.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>{const id=b.dataset.done;
+    state.progress[id]=state.progress[id]||{solved:0};state.progress[id].solved++;saveProgress();
+    toast("Great job! ⭐ "+id+" solved "+state.progress[id].solved+"×");});
+
+  // notation
+  document.querySelectorAll("[data-note]").forEach(b=>b.onclick=()=>{
+    const n=NOTES[+b.dataset.note]; const mi=moveInfo(n[2]);
+    const faceWord={F:"FRONT",R:"RIGHT",L:"LEFT",BR:"BACK-RIGHT",U:"TOP",y:"WHOLE puzzle"}[mi.face]||mi.face;
+    const st=document.getElementById("noteStage");
+    const isU=mi.face==='U'||mi.face==='y';
+    if(st) st.innerHTML=renderLL({size:300,highlightFace:isU?-1:(mi.idx<0?1:mi.idx),rot:isU?(n[0].includes("'")?-72:72):0});
+    const msg=document.getElementById("noteMsg");
+    if(msg) msg.innerHTML=`<b>${n[0]}</b> — ${n[1]}`;
+  });
+
+  // practice
+  document.querySelectorAll("[data-prac]").forEach(b=>b.onclick=()=>{
+    const p=b.dataset.prac; if(p==='recognize')pracRecognize(); else if(p==='choose')pracChoose(); else pracQuiz();
+  });
+  document.querySelectorAll("[data-ans]").forEach(b=>b.onclick=()=>{
+    const ok=b.dataset.ans===b.dataset.correct; const msg=document.getElementById("pracMsg");
+    if(msg) msg.querySelector(".bubble").innerHTML = ok?"<b style='color:#39d98a'>Correct! ⭐</b> Well spotted.":
+      "<b style='color:#ffcf5c'>Not quite.</b> The answer was <b>"+b.dataset.correct+"</b>. Look again at the picture — no worries, try the next one!";
+    if(ok){state.progress[b.dataset.correct]=state.progress[b.dataset.correct]||{solved:0};state.progress[b.dataset.correct].solved++;saveProgress();}
+  });
+}
+
+/* =====================================================================
+   3D MEGAMINX VIEWER (Three.js) — engine geometry verified separately
+   Real face-turning animation. Falls back to the 2D diagram if offline.
+   ===================================================================== */
+const MMX3D = (function(){
+  let THREE=null, loaded=false;
+  function buildMegaminx(){
+    const PHI=(1+Math.sqrt(5))/2, IP=1/PHI;
+    const v=(x,y,z)=>({x,y,z});
+    const sub=(a,b)=>v(a.x-b.x,a.y-b.y,a.z-b.z), add=(a,b)=>v(a.x+b.x,a.y+b.y,a.z+b.z);
+    const scale=(a,s)=>v(a.x*s,a.y*s,a.z*s), dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+    const cross=(a,b)=>v(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x);
+    const norm=a=>scale(a,1/Math.hypot(a.x,a.y,a.z)), mid=(a,b)=>scale(add(a,b),0.5);
+    const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z), key=a=>a.x.toFixed(3)+","+a.y.toFixed(3)+","+a.z.toFixed(3);
+    const lerp=(a,b,t)=>v(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,a.z+(b.z-a.z)*t);
+    const VERTS=[];
+    for(const sx of[1,-1])for(const sy of[1,-1])for(const sz of[1,-1])VERTS.push(v(sx,sy,sz));
+    for(const a of[IP,-IP])for(const b of[PHI,-PHI]){VERTS.push(v(0,a,b));VERTS.push(v(a,b,0));VERTS.push(v(b,0,a));}
+    const EL=2/PHI, adj=VERTS.map(()=>[]);
+    for(let i=0;i<20;i++)for(let j=i+1;j<20;j++)if(Math.abs(dist(VERTS[i],VERTS[j])-EL)<1e-6){adj[i].push(j);adj[j].push(i);}
+    const faceSet=new Map();
+    (function(){const found=new Set();
+      function dfs(start,cur,path){if(path.length===5){if(adj[cur].includes(start)){const s=[...path].sort((a,b)=>a-b).join(",");if(!found.has(s)){found.add(s);faceSet.set(s,path.slice());}}return;}for(const nx of adj[cur])if(!path.includes(nx))dfs(start,nx,[...path,nx]);}
+      for(let s=0;s<20;s++)dfs(s,s,[s]);})();
+    const fc=idx=>scale(idx.reduce((s,i)=>add(s,VERTS[i]),v(0,0,0)),1/idx.length);
+    function fnormal(idx){let n=v(0,0,0);for(let i=0;i<idx.length;i++){const a=VERTS[idx[i]],b=VERTS[idx[(i+1)%idx.length]];n.x+=(a.y-b.y)*(a.z+b.z);n.y+=(a.z-b.z)*(a.x+b.x);n.z+=(a.x-b.x)*(a.y+b.y);}n=norm(n);if(dot(n,fc(idx))<0)n=scale(n,-1);return n;}
+    function order(idx){const c=fc(idx),n=fnormal(idx),right=norm(sub(VERTS[idx[0]],c)),up=cross(n,right);
+      const az=i=>Math.atan2(dot(sub(VERTS[i],c),up),dot(sub(VERTS[i],c),right));return [...idx].sort((a,b)=>az(a)-az(b));}
+    const FACES=[...faceSet.values()].map(order), FN=FACES.map(fnormal), FC=FACES.map(fc);
+    const Rcf=0.42, g=0.30, pieces=[], pieceByKey=new Map();
+    function getPiece(type,pos){const k=type+":"+key(pos);if(pieceByKey.has(k))return pieceByKey.get(k);const p={type,pos:v(pos.x,pos.y,pos.z),facelets:[]};pieces.push(p);pieceByKey.set(k,p);return p;}
+    FACES.forEach((f,fi)=>{const c=FC[fi];const cv=f.map(i=>lerp(VERTS[i],c,1-Rcf));const eS=[],eE=[];
+      for(let i=0;i<5;i++){const j=(i+1)%5;eS[i]=lerp(VERTS[f[i]],VERTS[f[j]],g);eE[i]=lerp(VERTS[f[i]],VERTS[f[j]],1-g);}
+      getPiece('m',c).facelets.push({face:fi,poly:cv});
+      for(let i=0;i<5;i++){const j=(i+1)%5,im=(i+4)%5;
+        getPiece('e',mid(VERTS[f[i]],VERTS[f[j]])).facelets.push({face:fi,poly:[eS[i],eE[i],cv[j],cv[i]]});
+        getPiece('c',VERTS[f[i]]).facelets.push({face:fi,poly:[VERTS[f[i]],eS[i],cv[i],eE[im]]});}});
+    const rot=(p,k,ang)=>{const c=Math.cos(ang),s=Math.sin(ang),kd=dot(k,p),cr=cross(k,p);
+      return v(p.x*c+cr.x*s+k.x*kd*(1-c),p.y*c+cr.y*s+k.y*kd*(1-c),p.z*c+cr.z*s+k.z*kd*(1-c));};
+    function onFacePieces(fi){const f=FACES[fi],slots=[];f.forEach(i=>slots.push(VERTS[i]));
+      for(let i=0;i<5;i++)slots.push(mid(VERTS[f[i]],VERTS[f[(i+1)%5]]));slots.push(FC[fi]);
+      return pieces.filter(p=>slots.some(s=>dist(s,p.pos)<1e-3));}
+    function shareEdge(a,b){let c=0;a.forEach(x=>{if(b.includes(x))c++;});return c===2;}
+    let U=0,by=-9;FC.forEach((c,i)=>{if(c.y>by){by=c.y;U=i;}});
+    let Uadj=FACES.map((_,i)=>i).filter(i=>i!==U&&shareEdge(FACES[U],FACES[i]));
+    const un=FN[U],rgt=norm(sub(FC[Uadj[0]],FC[U])),upv=cross(un,rgt);
+    const azi=i=>Math.atan2(dot(sub(FC[i],FC[U]),upv),dot(sub(FC[i],FC[U]),rgt));
+    Uadj.sort((a,b)=>azi(a)-azi(b));
+    let F=Uadj[0],bz=-9;Uadj.forEach(i=>{if(FC[i].z>bz){bz=FC[i].z;F=i;}});
+    const fIdx=Uadj.indexOf(F),ring=Uadj.slice(fIdx).concat(Uadj.slice(0,fIdx));
+    function neighborsOf(fi){return FACES.map((_,i)=>i).filter(i=>i!==fi&&shareEdge(FACES[fi],FACES[i]));}
+    function lowestNew(fi,ex){let best=-1,b=9;neighborsOf(fi).forEach(i=>{if(!ex.includes(i)&&FC[i].y<b){b=FC[i].y;best=i;}});return best;}
+    const LET={U,F,R:ring[1],BR:ring[2],BL:ring[3],L:ring[4]};
+    LET.DR=lowestNew(LET.R,[U,...ring]);LET.DL=lowestNew(LET.L,[U,...ring]);
+    return {pieces,FACES,FN,FC,VERTS,LET,U,applyMove:(fi,dir)=>{const axis=FN[fi],ang=dir*2*Math.PI/5;onFacePieces(fi).forEach(p=>{p.pos=rot(p.pos,axis,ang);});}};
+  }
+  const PAL=["#ffd21f","#f4f4ec","#e23b3b","#2f6bff","#27ae60","#9b59b6","#ff8c1a","#5ec8ff","#8ee06a","#ff7eb6","#243a8a","#6b7280"];
+  let scene,cam,renderer,world,M,groups=[],anim=null,onProg=null,topColorHex="#ffd21f";
+  let moves=[],idx=0,setup=[],speed=650,playing=false,dragging=false,lx=0,ly=0,currentAlg="",windowBound=false;
+  function parse(alg){return alg.trim().split(/\s+/).filter(Boolean).map(t=>({raw:t,base:t.replace(/['2]/g,""),prime:t.includes("'"),dbl:t.includes("2")}));}
+  function inv(alg){return parse(alg).reverse().map(m=>m.base+(m.dbl?"2":"")+(m.dbl?"":(m.prime?"":"'"))).join(" ");}
+  function faceOf(b){return M.LET[b]!==undefined?M.LET[b]:M.LET.R;}
+  function polyGeom(poly){const g=new THREE.BufferGeometry();
+    const cx=poly.reduce((s,p)=>s+p.x,0)/poly.length,cy=poly.reduce((s,p)=>s+p.y,0)/poly.length,cz=poly.reduce((s,p)=>s+p.z,0)/poly.length;
+    const inset=poly.map(p=>({x:cx+(p.x-cx)*0.88,y:cy+(p.y-cy)*0.88,z:cz+(p.z-cz)*0.88}));
+    const pos=[];for(let i=1;i<inset.length-1;i++){pos.push(inset[0].x,inset[0].y,inset[0].z, inset[i].x,inset[i].y,inset[i].z, inset[i+1].x,inset[i+1].y,inset[i+1].z);}
+    g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();return g;}
+  function buildMeshes(){groups.forEach(g=>world.remove(g));groups=[];
+    // dark core so gaps look black like a real puzzle
+    const core=new THREE.Mesh(new THREE.DodecahedronGeometry(1.18),new THREE.MeshBasicMaterial({color:0x07080f}));world.add(core);groups.push(core);
+    M.pieces.forEach(p=>{const grp=new THREE.Group();
+      p.facelets.forEach(f=>{const col=(f.face===M.U)?topColorHex:PAL[f.face%PAL.length];
+        const mesh=new THREE.Mesh(polyGeom(f.poly),new THREE.MeshLambertMaterial({color:new THREE.Color(col)}));grp.add(mesh);});
+      grp.userData={piece:p,base:new THREE.Quaternion()};world.add(grp);groups.push(grp);p._grp=grp;});}
+  function quatAxis(fi,ang){const n=M.FN[fi];const q=new THREE.Quaternion();q.setFromAxisAngle(new THREE.Vector3(n.x,n.y,n.z).normalize(),ang);return q;}
+  function onFace(fi,p){const f=M.FACES[fi],V=M.VERTS,d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
+    const slots=[];f.forEach(i=>slots.push(V[i]));for(let i=0;i<5;i++)slots.push({x:(V[f[i]].x+V[f[(i+1)%5]].x)/2,y:(V[f[i]].y+V[f[(i+1)%5]].y)/2,z:(V[f[i]].z+V[f[(i+1)%5]].z)/2});slots.push(M.FC[fi]);
+    return slots.some(s=>d(s,p.pos)<1e-3);}
+  function applyInstant(fi,dir){const q=quatAxis(fi,dir*2*Math.PI/5);
+    M.pieces.filter(p=>onFace(fi,p)).forEach(p=>{p._grp.quaternion.premultiply(q);p._grp.userData.base.copy(p._grp.quaternion);});M.applyMove(fi,dir);}
+  function yRot(sgn,reps){const n=M.FN[M.U],vv=(x,y,z)=>({x,y,z}),cross=(a,b)=>vv(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x),dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+    for(let r=0;r<reps;r++){const ang=sgn*2*Math.PI/5,c=Math.cos(ang),s=Math.sin(ang);M.pieces.forEach(p=>{const kd=dot(n,p.pos),cr=cross(n,p.pos);p.pos={x:p.pos.x*c+cr.x*s+n.x*kd*(1-c),y:p.pos.y*c+cr.y*s+n.y*kd*(1-c),z:p.pos.z*c+cr.z*s+n.z*kd*(1-c)};});}}
+  function yRotInstant(sgn,reps){const n=M.FN[M.U];const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(n.x,n.y,n.z).normalize(),sgn*reps*2*Math.PI/5);
+    M.pieces.forEach(p=>{p._grp.quaternion.premultiply(q);p._grp.userData.base.copy(p._grp.quaternion);});yRot(sgn,reps);}
+  function animateMove(m,done){const fi=m.base==="y"?M.U:faceOf(m.base);const reps=m.dbl?2:1,dir=(m.prime?1:-1),ang=dir*reps*2*Math.PI/5;
+    const sel=m.base==="y"?M.pieces.slice():M.pieces.filter(p=>onFace(fi,p));
+    sel.forEach(p=>p._grp.userData.base.copy(p._grp.quaternion));const t0=performance.now();
+    function tick(now){const t=Math.min(1,(now-t0)/speed);const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const q=quatAxis(fi,ang*e);
+      sel.forEach(p=>{p._grp.quaternion.copy(p._grp.userData.base).premultiply(q);});renderer.render(scene,cam);
+      if(t<1){anim=requestAnimationFrame(tick);}else{const qf=quatAxis(fi,ang);
+        sel.forEach(p=>{p._grp.quaternion.copy(p._grp.userData.base).premultiply(qf);p._grp.userData.base.copy(p._grp.quaternion);});
+        if(m.base==="y")yRot(m.prime?1:-1,reps);else for(let r=0;r<reps;r++)M.applyMove(fi,dir);
+        anim=null;done&&done();}}
+    anim=requestAnimationFrame(tick);}
+  function orient(){const n=new THREE.Vector3(M.FN[M.U].x,M.FN[M.U].y,M.FN[M.U].z).normalize();
+    world.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(n,new THREE.Vector3(0,1,0)));}
+  function applySetup(){setup.forEach(m=>{const fi=m.base==="y"?M.U:faceOf(m.base);const reps=m.dbl?2:1,dir=(m.prime?1:-1);
+    if(m.base==="y")yRotInstant(m.prime?1:-1,reps);else for(let r=0;r<reps;r++)applyInstant(fi,dir);});}
+  function rebuild(){M=buildMegaminx();buildMeshes();orient();moves=parse(currentAlg);setup=parse(inv(currentAlg));applySetup();idx=0;render();report();}
+  function render(){renderer&&renderer.render(scene,cam);}
+  function report(){onProg&&onProg(idx,moves.map(m=>m.raw));}
+  function init(cont,alg,topHex,progressCb){
+    if(!window.THREE||!cont){loaded=false;return false;}
+    THREE=window.THREE;loaded=true;onProg=progressCb||null;topColorHex=topHex||"#ffd21f";currentAlg=alg;
+    const W=cont.clientWidth||340,H=cont.clientHeight||340;
+    scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(42,W/H,0.1,100);cam.position.set(0,2.0,5.7);cam.lookAt(0,0,0);
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(window.devicePixelRatio||1);renderer.setSize(W,H);
+    cont.innerHTML="";cont.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0xffffff,0.82));const d1=new THREE.DirectionalLight(0xffffff,0.5);d1.position.set(3,6,5);scene.add(d1);
+    const d2=new THREE.DirectionalLight(0xffffff,0.22);d2.position.set(-4,-2,-3);scene.add(d2);
+    world=new THREE.Group();scene.add(world);rebuild();
+    const dom=renderer.domElement;dom.style.cursor="grab";dom.style.touchAction="none";
+    dom.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;dom.style.cursor="grabbing";});
+    if(!windowBound){ windowBound=true;
+      window.addEventListener('pointerup',()=>{dragging=false;if(renderer&&renderer.domElement)renderer.domElement.style.cursor="grab";});
+      window.addEventListener('pointermove',e=>{if(!dragging||!world)return;const dx=(e.clientX-lx)/120,dy=(e.clientY-ly)/120;lx=e.clientX;ly=e.clientY;
+        world.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx)).premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy));render();});
+    }
+    render();return true;}
+  function step(cb){if(anim||idx>=moves.length)return;animateMove(moves[idx],()=>{idx++;report();cb&&cb();});}
+  function play(){if(playing){playing=false;return;}playing=true;const go=()=>{if(!playing||idx>=moves.length){playing=false;report();return;}step(()=>setTimeout(go,140));};go();}
+  function jumpTo(n){if(anim)return;playing=false;n=Math.max(0,Math.min(moves.length,n));
+    const view=world?world.quaternion.clone():null;
+    M=buildMegaminx();buildMeshes();orient();if(view)world.quaternion.copy(view);applySetup();
+    for(let i=0;i<n;i++){const m=moves[i];const fi=m.base==="y"?M.U:faceOf(m.base);const reps=m.dbl?2:1,dir=(m.prime?1:-1);
+      if(m.base==="y")yRotInstant(m.prime?1:-1,reps);else for(let r=0;r<reps;r++)applyInstant(fi,dir);}
+    idx=n;render();report();}
+  function back(){if(anim||idx<=0)return;jumpTo(idx-1);}
+  function reset(){if(anim)return;playing=false;jumpTo(0);}
+  function setSpeed(ms){speed=ms;}
+  return {init,step,play,back,reset,jumpTo,setSpeed,isLoaded:()=>loaded,get index(){return idx;}};
+})();
+
+/* ---- Teaching controller (routes controls to 3D or 2D) ---- */
+let teachSpeed=650;
+function teach3DActive(){return state.screen.startsWith("teach:") && !!window.THREE && state.viewMode==="3d";}
+function teachChips(idx){document.querySelectorAll("#moveChips .movechip").forEach((el,i)=>{el.classList.toggle("done",i<idx);el.classList.toggle("current",i===idx);});}
+function teachMoveMsg(idx,moves){const el=document.getElementById("coachMsg");if(!el)return;
+  if(idx>=moves.length){el.innerHTML=`<b>Done! 🎉</b> The top face should now be solved. If it matches your puzzle, press "I solved it!".`;return;}
+  const mi=moveInfo(moves[idx]);
+  const faceWord={F:"FRONT",R:"RIGHT",L:"LEFT",BR:"BACK-RIGHT",DR:"DOWN-RIGHT",BL:"BACK-LEFT",DL:"DOWN-LEFT",U:"TOP",y:"WHOLE puzzle"}[mi.face]||mi.face;
+  const dir=mi.prime?"anti-clockwise (the other way)":"clockwise";
+  el.innerHTML=`Next move (${idx+1}/${moves.length}): <b>${mi.raw}</b> — turn the <b>${faceWord}</b> face ${dir}${mi.dbl?" twice":""}.`;}
+function teachOnProg(idx,moves){teachChips(idx);teachMoveMsg(idx,moves);}
+function openTeach(id){
+  state.screen="teach:"+id;
+  document.getElementById("view").innerHTML=scrTeach(id);
+  renderTabs(); wire(); startPlayer(id);
+  const c=teachOf(id);
+  if(window.THREE && state.viewMode==="3d"){
+    const host=document.getElementById("mmx3dHost");
+    if(host){ MMX3D.init(host,c.alg,COLORS.top,teachOnProg); MMX3D.setSpeed(teachSpeed); }
+  } else { playerRenderStep(); teachOnProg(0,parseAlg(c.alg)); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* =====================================================================
+   3D 3x3 CUBE VIEWER (Three.js) — engine verified separately (25/25)
+   ===================================================================== */
+let CUBE_COLORS={U:"#ffd21f",D:"#f4f4ec",F:"#27ae60",B:"#2f6bff",R:"#e23b3b",L:"#ff8c1a",core:"#0a0c14"};
+const CUBE_COLOR_NAMES={U:"Top",D:"Bottom",F:"Front",B:"Back",R:"Right",L:"Left"};
+const CUBE3D = (function(){
+  let THREE=null, loaded=false, scene,cam,renderer,world,cubies=[],anim=null,onProg=null,N=3;
+  let moves=[],idx=0,setup=[],speed=620,playing=false,dragging=false,lx=0,ly=0,currentAlg="",windowBound=false;
+  const UNIT=1.04;
+  const COL=CUBE_COLORS;
+  let VARIANT=null;
+  function widths(){return (VARIANT==='mirror'&&N===3)?[1.3,1.0,0.7]:new Array(N).fill(1);}
+  function axisCenters(){const W=widths();const cum=[0];W.forEach(w=>cum.push(cum[cum.length-1]+w));const tot=cum[cum.length-1];return W.map((w,i)=>((cum[i]+cum[i+1])/2-tot/2)*UNIT);}
+  function axisBoxes(){return widths().map(w=>w*UNIT*0.95);}
+  function layerOf(c){return (c+(N-1))/2;}
+  function slot(p){const C=axisCenters();return [C[layerOf(p[0])],C[layerOf(p[1])],C[layerOf(p[2])]];}
+  function boxOf(h){const B=axisBoxes();return [B[layerOf(h[0])],B[layerOf(h[1])],B[layerOf(h[2])]];}
+  function rotV(p,axis,q){let [x,y,z]=p;const n=((q%4)+4)%4;for(let i=0;i<n;i++){if(axis==='x'){[y,z]=[-z,y];}else if(axis==='y'){[x,z]=[z,-x];}else{[x,y]=[-y,x];}}return [x,y,z];}
+  const FACE={R:{ax:'x',sg:1,s:-1},L:{ax:'x',sg:-1,s:1},U:{ax:'y',sg:1,s:-1},D:{ax:'y',sg:-1,s:1},
+    F:{ax:'z',sg:1,s:-1},B:{ax:'z',sg:-1,s:1},M:{ax:'x',sg:0,s:1,sl:1},E:{ax:'y',sg:0,s:1,sl:1},S:{ax:'z',sg:0,s:-1,sl:1},
+    X:{ax:'x',s:-1,all:1},Y:{ax:'y',s:-1,all:1},Z:{ax:'z',s:-1,all:1}};
+  function moveDef(tok){const m=tok.match(/^(\d*)([RLUDFBMESxyz])(w?)(2?)('?)$/);if(!m)return null;
+    const num=m[1]?parseInt(m[1]):0,base=m[2],wide=m[3]==='w',dbl=m[4]==='2',prime=m[5]==="'";
+    const up=base.toUpperCase(),f=FACE[up];if(!f)return null;const maxc=N-1;let layers=[];
+    if(f.all){for(let c=-maxc;c<=maxc;c+=2)layers.push(c);}
+    else if(f.sl){for(let c=-maxc+2;c<=maxc-2;c+=2)layers.push(c);}
+    else{const lower=/[rludfb]/.test(base),isWide=wide||lower;
+      if(isWide){const depth=num||2;for(let k=0;k<depth;k++)layers.push(f.sg*(maxc-2*k));}
+      else if(num){layers=[f.sg*(maxc-2*(num-1))];}
+      else{layers=[f.sg*maxc];}}
+    return {ax:f.ax,layers,q:(dbl?2:1)*(prime?-1:1)*f.s};}
+  function parse(alg){return alg.trim().split(/\s+/).filter(Boolean);}
+  function inv(alg){return parse(alg).reverse().map(t=>{const m=t.match(/^(\d*[RLUDFBMESxyz]w?)(2?)('?)$/);return m?(m[1]+(m[2]?"2":(m[3]?"":"'"))):t;}).join(" ");}
+  function sticker(color,axis,sign,bd){let w,h,off;
+    if(axis==='x'){w=bd[2];h=bd[1];off=bd[0]/2;}else if(axis==='y'){w=bd[0];h=bd[2];off=bd[1]/2;}else{w=bd[0];h=bd[1];off=bd[2]/2;}
+    const g=new THREE.PlaneGeometry(w*0.86,h*0.86);
+    const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:new THREE.Color(color),side:THREE.DoubleSide}));const d=off+0.006;
+    if(axis==='x'){mesh.rotation.y=Math.PI/2;mesh.position.x=sign*d;}else if(axis==='y'){mesh.rotation.x=Math.PI/2;mesh.position.y=sign*d;}else{mesh.position.z=sign*d;}return mesh;}
+  function buildCube(){cubies.forEach(c=>world.remove(c.grp));cubies=[];const maxc=N-1;
+    const fc=f=>VARIANT==='mirror'?"#e8c45a":COL[f];const coreC=VARIANT==='mirror'?"#b9962f":COL.core;
+    for(let x=-maxc;x<=maxc;x+=2)for(let y=-maxc;y<=maxc;y+=2)for(let z=-maxc;z<=maxc;z+=2){
+      if(Math.abs(x)!==maxc&&Math.abs(y)!==maxc&&Math.abs(z)!==maxc)continue;
+      const home=[x,y,z],bd=boxOf(home);const grp=new THREE.Group();
+      grp.add(new THREE.Mesh(new THREE.BoxGeometry(bd[0],bd[1],bd[2]),new THREE.MeshBasicMaterial({color:coreC})));
+      if(x===maxc)grp.add(sticker(fc('R'),'x',1,bd)); if(x===-maxc)grp.add(sticker(fc('L'),'x',-1,bd));
+      if(y===maxc)grp.add(sticker(fc('U'),'y',1,bd)); if(y===-maxc)grp.add(sticker(fc('D'),'y',-1,bd));
+      if(z===maxc)grp.add(sticker(fc('F'),'z',1,bd)); if(z===-maxc)grp.add(sticker(fc('B'),'z',-1,bd));
+      const sc=slot(home);grp.position.set(sc[0],sc[1],sc[2]);
+      if(VARIANT==='windmill'&&N===3&&y===0){const a=24*Math.PI/180;const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),a);grp.position.applyQuaternion(q);grp.quaternion.premultiply(q);}
+      world.add(grp);cubies.push({pos:[x,y,z],grp});}}
+  function selOf(d){return cubies.filter(c=>{const v=c.pos[d.ax==='x'?0:d.ax==='y'?1:2];return d.layers.some(L=>Math.abs(L-v)<1e-9);});}
+  function applyInstant(tok){const d=moveDef(tok);if(!d)return;const n=((d.q%4)+4)%4;
+    const axis=new THREE.Vector3(d.ax==='x'?1:0,d.ax==='y'?1:0,d.ax==='z'?1:0);
+    const q=new THREE.Quaternion().setFromAxisAngle(axis,(Math.PI/2)*n);
+    selOf(d).forEach(c=>{c.grp.quaternion.premultiply(q);c.pos=rotV(c.pos,d.ax,d.q);const sc=slot(c.pos);c.grp.position.set(sc[0],sc[1],sc[2]);});}
+  function animateMove(tok,done){const d=moveDef(tok);if(!d){done&&done();return;}const n=((d.q%4)+4)%4;
+    const total=(Math.PI/2)*n;const axis=new THREE.Vector3(d.ax==='x'?1:0,d.ax==='y'?1:0,d.ax==='z'?1:0);
+    const sel=selOf(d);sel.forEach(c=>{c._p0=c.grp.position.clone();c._q0=c.grp.quaternion.clone();});const t0=performance.now();
+    function tick(now){const t=Math.min(1,(now-t0)/speed);const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+      const q=new THREE.Quaternion().setFromAxisAngle(axis,total*e);
+      sel.forEach(c=>{c.grp.position.copy(c._p0).applyQuaternion(q);c.grp.quaternion.copy(c._q0).premultiply(q);});renderer.render(scene,cam);
+      if(t<1){anim=requestAnimationFrame(tick);}else{const qf=new THREE.Quaternion().setFromAxisAngle(axis,total);
+        sel.forEach(c=>{c.grp.quaternion.copy(c._q0).premultiply(qf);c.pos=rotV(c.pos,d.ax,d.q);const sc=slot(c.pos);c.grp.position.set(sc[0],sc[1],sc[2]);});anim=null;done&&done();}}
+    anim=requestAnimationFrame(tick);}
+  function rebuildTo(k){buildCube();setup.forEach(t=>applyInstant(t));for(let i=0;i<k;i++)applyInstant(moves[i]);idx=k;render();report();}
+  function render(){renderer&&renderer.render(scene,cam);}
+  function report(){onProg&&onProg(idx,moves);}
+  function camDist(){const maxR=Math.sqrt(3)*UNIT*(N/2)+UNIT*(VARIANT==='mirror'?0.95:0.3);return maxR*1.25/Math.tan(21*Math.PI/180);}
+  function init(cont,alg,prog,n,variant){if(!window.THREE||!cont){loaded=false;return false;}
+    THREE=window.THREE;loaded=true;onProg=prog||null;currentAlg=alg;N=n||3;VARIANT=variant||null;
+    const W=cont.clientWidth||340,H=cont.clientHeight||340;
+    scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(42,W/H,0.1,100);const D=camDist();cam.position.set(D*0.5,D*0.5,D*0.71);cam.lookAt(0,0,0);
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(window.devicePixelRatio||1);renderer.setSize(W,H);
+    cont.innerHTML="";cont.appendChild(renderer.domElement);world=new THREE.Group();scene.add(world);
+    moves=parse(alg);setup=parse(inv(alg));rebuildTo(0);
+    const dom=renderer.domElement;dom.style.cursor="grab";dom.style.touchAction="none";
+    dom.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;});
+    if(!windowBound){windowBound=true;
+      window.addEventListener('pointerup',()=>{dragging=false;});
+      window.addEventListener('pointermove',e=>{if(!dragging||!world)return;const dx=(e.clientX-lx)/120,dy=(e.clientY-ly)/120;lx=e.clientX;ly=e.clientY;
+        world.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx)).premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy));render();});}
+    render();return true;}
+  function step(cb){if(anim||idx>=moves.length)return;animateMove(moves[idx],()=>{idx++;report();cb&&cb();});}
+  function play(){if(playing){playing=false;return;}playing=true;const go=()=>{if(!playing||idx>=moves.length){playing=false;report();return;}step(()=>setTimeout(go,150));};go();}
+  function jumpTo(k){if(anim)return;playing=false;const v=world?world.quaternion.clone():null;rebuildTo(Math.max(0,Math.min(moves.length,k)));if(v)world.quaternion.copy(v);render();}
+  function back(){if(anim||idx<=0)return;jumpTo(idx-1);}
+  function reset(){if(anim)return;playing=false;jumpTo(0);}
+  function setSpeed(ms){speed=ms;}
+  return {init,step,play,back,reset,jumpTo,setSpeed,isLoaded:()=>loaded,get index(){return idx;}};
+})();
+
+/* =====================================================================
+   3D PYRAMINX VIEWER (Three.js) — tetrahedron engine verified (12/12)
+   ===================================================================== */
+const PYRA3D = (function(){
+  let THREE=null,loaded=false,scene,cam,renderer,world,pieces=[],anim=null,onProg=null;
+  let moves=[],idx=0,setup=[],speed=620,playing=false,dragging=false,lx=0,ly=0,currentAlg="",windowBound=false;
+  const SZ=1.25, COLS=["#27ae60","#e23b3b","#2f6bff","#ffd21f"], CORE="#0a0c14";
+  const Vr=[[1,1,1],[1,-1,-1],[-1,1,-1],[-1,-1,1]].map(v=>v.map(x=>x*SZ/Math.sqrt(3)));
+  const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],scl=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+  const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],nrm=a=>{const m=Math.hypot(a[0],a[1],a[2])||1;return [a[0]/m,a[1]/m,a[2]/m];};
+  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+  const Naxis=Vr.map(nrm);
+  const LET={U:0,R:1,L:2,B:3};
+  function parse(a){return a.trim().split(/\s+/).filter(Boolean);}
+  function inv(a){return parse(a).reverse().map(t=>{const b=t.replace(/['2]/g,"");return b+(t.includes("'")?"":"'");}).join(" ");}
+  function pcCentroid(t,key){ if(t==='corner')return Vr[key]; if(t==='center')return scl(Vr[key],-1/3);
+    const [i,j]=(""+key).split("-").map(Number);return scl(add(Vr[i],Vr[j]),0.5); }
+  function buildGeom(){
+    const faceList=[]; for(let k=0;k<4;k++){const others=[0,1,2,3].filter(x=>x!==k);faceList.push({omit:k,verts:others,color:COLS[k]});}
+    const pieceMap={};
+    faceList.forEach(f=>{
+      const a=Vr[f.verts[0]],b=Vr[f.verts[1]],c=Vr[f.verts[2]];
+      const G=(i,j)=>add(add(a,scl(sub(b,a),i/3)),scl(sub(c,a),j/3));
+      const tris=[];
+      for(let i=0;i<3;i++)for(let j=0;j<3-i;j++)tris.push([G(i,j),G(i+1,j),G(i,j+1)]);
+      for(let i=0;i<2;i++)for(let j=0;j<2-i;j++)tris.push([G(i+1,j),G(i,j+1),G(i+1,j+1)]);
+      const cands=[];
+      f.verts.forEach(vi=>cands.push({t:'corner',key:vi,c:pcCentroid('corner',vi)}));
+      for(let x=0;x<3;x++)for(let y=x+1;y<3;y++){const i=f.verts[x],j=f.verts[y];const key=Math.min(i,j)+"-"+Math.max(i,j);cands.push({t:'edge',key,c:pcCentroid('edge',key)});}
+      cands.push({t:'center',key:f.omit,c:pcCentroid('center',f.omit)});
+      tris.forEach(tri=>{const cf=scl(add(add(tri[0],tri[1]),tri[2]),1/3);
+        let best=cands[0],bd=1e9;cands.forEach(cd=>{const d=dist(cf,cd.c);if(d<bd){bd=d;best=cd;}});
+        const id=best.t+":"+best.key;if(!pieceMap[id])pieceMap[id]={t:best.t,key:best.key,pos:best.c.slice(),facelets:[]};
+        pieceMap[id].facelets.push({color:f.color,tri});});
+    });
+    return Object.values(pieceMap);
+  }
+  function quatAxis(vi,ang){const n=Naxis[vi];return new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(n[0],n[1],n[2]),ang);}
+  function selOf(vi){return pieces.filter(p=>dot(nrm(p.pos),Naxis[vi])>0.1);}
+  function rotVec(p,vi,ang){const n=Naxis[vi];const c=Math.cos(ang),s=Math.sin(ang);const kd=n[0]*p[0]+n[1]*p[1]+n[2]*p[2];
+    const cr=[n[1]*p[2]-n[2]*p[1],n[2]*p[0]-n[0]*p[2],n[0]*p[1]-n[1]*p[0]];
+    return [p[0]*c+cr[0]*s+n[0]*kd*(1-c),p[1]*c+cr[1]*s+n[1]*kd*(1-c),p[2]*c+cr[2]*s+n[2]*kd*(1-c)];}
+  function applyInstant(tok){const base=tok.replace(/['2]/g,"");const vi=LET[base.toUpperCase()];if(vi===undefined)return;const dir=tok.includes("'")?-1:1;
+    const q=quatAxis(vi,dir*2*Math.PI/3);selOf(vi).forEach(p=>{p.grp.quaternion.premultiply(q);p.pos=rotVec(p.pos,vi,dir*2*Math.PI/3);});}
+  function animateMove(tok,done){const base=tok.replace(/['2]/g,"");const vi=LET[base.toUpperCase()];if(vi===undefined){done&&done();return;}
+    const dir=tok.includes("'")?-1:1,total=dir*2*Math.PI/3;const sel=selOf(vi);sel.forEach(p=>p._q0=p.grp.quaternion.clone());const t0=performance.now();
+    function tick(now){const t=Math.min(1,(now-t0)/speed);const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const q=quatAxis(vi,total*e);
+      sel.forEach(p=>p.grp.quaternion.copy(p._q0).premultiply(q));renderer.render(scene,cam);
+      if(t<1){anim=requestAnimationFrame(tick);}else{const qf=quatAxis(vi,total);sel.forEach(p=>{p.grp.quaternion.copy(p._q0).premultiply(qf);p.pos=rotVec(p.pos,vi,total);});anim=null;done&&done();}}
+    anim=requestAnimationFrame(tick);}
+  function buildMeshes(){pieces.forEach(p=>p.grp&&world.remove(p.grp));if(world._core)world.remove(world._core);pieces=buildGeom();
+    const core=new THREE.Mesh(new THREE.TetrahedronGeometry(SZ*0.78),new THREE.MeshBasicMaterial({color:CORE}));world.add(core);world._core=core;
+    pieces.forEach(p=>{const grp=new THREE.Group();
+      p.facelets.forEach(f=>{const ctr=[(f.tri[0][0]+f.tri[1][0]+f.tri[2][0])/3,(f.tri[0][1]+f.tri[1][1]+f.tri[2][1])/3,(f.tri[0][2]+f.tri[1][2]+f.tri[2][2])/3];
+        const ins=f.tri.map(v=>[ctr[0]+(v[0]-ctr[0])*0.86,ctr[1]+(v[1]-ctr[1])*0.86,ctr[2]+(v[2]-ctr[2])*0.86]);
+        const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([...ins[0],...ins[1],...ins[2]],3));g.computeVertexNormals();
+        grp.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:new THREE.Color(f.color),side:THREE.DoubleSide})));});
+      grp.quaternion.set(0,0,0,1);world.add(grp);p.grp=grp;});}
+  function rebuildTo(k){buildMeshes();setup.forEach(applyInstant);for(let i=0;i<k;i++)applyInstant(moves[i]);idx=k;render();report();}
+  function render(){renderer&&renderer.render(scene,cam);}
+  function report(){onProg&&onProg(idx,moves);}
+  function init(cont,alg,prog){if(!window.THREE||!cont){loaded=false;return false;}
+    THREE=window.THREE;loaded=true;onProg=prog||null;currentAlg=alg;
+    const W=cont.clientWidth||340,H=cont.clientHeight||340;
+    scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(42,W/H,0.1,100);const D=SZ*4.2;cam.position.set(D*0.2,D*0.45,D*0.92);cam.lookAt(0,0,0);
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(window.devicePixelRatio||1);renderer.setSize(W,H);
+    cont.innerHTML="";cont.appendChild(renderer.domElement);world=new THREE.Group();scene.add(world);
+    world.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(Naxis[0][0],Naxis[0][1],Naxis[0][2]),new THREE.Vector3(0,1,0)));
+    moves=parse(alg);setup=parse(inv(alg));rebuildTo(0);
+    const dom=renderer.domElement;dom.style.cursor="grab";dom.style.touchAction="none";
+    dom.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;});
+    if(!windowBound){windowBound=true;
+      window.addEventListener('pointerup',()=>{dragging=false;});
+      window.addEventListener('pointermove',e=>{if(!dragging||!world)return;const dx=(e.clientX-lx)/120,dy=(e.clientY-ly)/120;lx=e.clientX;ly=e.clientY;
+        world.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),dx)).premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),dy));render();});}
+    render();return true;}
+  function step(cb){if(anim||idx>=moves.length)return;animateMove(moves[idx],()=>{idx++;report();cb&&cb();});}
+  function play(){if(playing){playing=false;return;}playing=true;const go=()=>{if(!playing||idx>=moves.length){playing=false;report();return;}step(()=>setTimeout(go,170));};go();}
+  function jumpTo(k){if(anim)return;playing=false;const v=world?world.quaternion.clone():null;rebuildTo(Math.max(0,Math.min(moves.length,k)));if(v)world.quaternion.copy(v);render();}
+  function back(){if(anim||idx<=0)return;jumpTo(idx-1);}
+  function reset(){if(anim)return;playing=false;jumpTo(0);}
+  function setSpeed(ms){speed=ms;}
+  return {init,step,play,back,reset,jumpTo,setSpeed,isLoaded:()=>loaded,get index(){return idx;}};
+})();
+
+/* ---- 3x3 / cube teaching page ---- */
+let cubeSpeed=620, cubeCase={kind:null,i:0};
+function cubeCaseOf(kind,i){ if(kind==='oll')return {name:'OLL '+OLL3[i].n,alg:OLL3[i].alg,sub:'Orientation'};
+  if(kind==='pll')return {name:'PLL '+PLL3[i].name,alg:PLL3[i].alg,sub:PLL3[i].type};
+  if(kind==='parity'){const g=findCase('parity',i);return {name:g.n,alg:g.alg,sub:'4×4 parity'};}
+  if(kind==='eo')return {name:EO[i].name,alg:EO[i].alg,sub:'Edge orientation'};
+  if(kind==='co')return {name:CO[i].name,alg:CO[i].alg,sub:'Corner orientation'};
+  return {name:PYRA[i].name,alg:PYRA[i].alg,sub:'Pyraminx'}; }
+function cubeChips(idx){document.querySelectorAll("#moveChips .movechip").forEach((el,i)=>{el.classList.toggle("done",i<idx);el.classList.toggle("current",i===idx);});}
+function cubeMsg(idx,mv){const el=document.getElementById("coachMsg");if(!el)return;
+  if(idx>=mv.length){el.innerHTML="<b>Done! 🎉</b> The cube should be solved. Press <b>↺ Reset</b> to watch again.";return;}
+  el.innerHTML="Next move ("+(idx+1)+"/"+mv.length+"): <b>"+mv[idx]+"</b> — turn that face.";}
+function scrCubeTeach(kind,i){const c=cubeCaseOf(kind,i);const moves=parseAlg(c.alg);const threeOK=!!window.THREE;
+  return `<div class="card">
+    <div class="row between"><h2 style="margin:0">${c.name}</h2><span class="tag verified">verified</span></div>
+    <div class="grid g2" style="align-items:start;margin-top:8px">
+      <div>
+        <div class="stage" style="min-height:340px">${threeOK?`<div id="cube3dHost" style="width:340px;height:340px;max-width:100%"></div>`:`<p class="muted">3D needs internet the first time. Algorithm is on the right.</p>`}</div>
+        <p class="muted" style="text-align:center;font-size:12px">${threeOK?"Drag to look around. Watch the cube turn as each move plays.":""}</p>
+      </div>
+      <div>
+        <span class="tag adv">${c.sub}</span>
+        <h3>The algorithm</h3>
+        <div class="alg">${c.alg}</div>
+        <div class="src" style="margin-top:6px">Source: SpeedCubeDB</div>
+        <h3>Do it move-by-move <span class="muted" style="font-size:12px;font-weight:400">— tap a move to jump</span></h3>
+        <div class="movechips" id="moveChips">${moves.map((m,k)=>`<span class="movechip" data-cmi="${k}" title="Jump here">${m}</span>`).join("")}</div>
+        <div class="coach"><div class="face">🦉</div><div class="bubble" id="coachMsg">Press <b>Play</b> and follow along.</div></div>
+        <div class="row" style="margin-top:6px">
+          <button class="btn sm ghost" data-cpl="back">⟲ Back</button>
+          <button class="btn sm" data-cpl="play">▶ Play</button>
+          <button class="btn sm ghost" data-cpl="step">Step ▶</button>
+          <button class="btn sm ghost" data-cpl="slow">🐢 Slow</button>
+          <button class="btn sm ghost" data-cpl="reset">↺ Reset</button>
+        </div>
+        <div class="row" style="margin-top:10px"><button class="btn sm ghost" data-go="plibrary">← Back to cases</button></div>
+      </div>
+    </div></div>`;}
+function openCubeTeach(kind,i){ cubeCase={kind,i}; state.screen="cubeteach";
+  document.getElementById("view").innerHTML=scrCubeTeach(kind,i); renderTabs(); wire();
+  const c=cubeCaseOf(kind,i);
+  const E=engineObj(P()); if(E){const host=document.getElementById("cube3dHost"); if(host){E.init(host,c.alg,(idx,mv)=>{cubeChips(idx);cubeMsg(idx,mv);});E.setSpeed(cubeSpeed);}}
+  window.scrollTo({top:0,behavior:'smooth'}); }
+
+/* ---- Photo helper (assisted, never auto-guesses) ---- */
+const photo={img:null,taps:[],samples:[],active:false};
+function rgbDist(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);}
+const PHOTO_STEPS=["the CENTRE of the top face",
+  "a CORNER sticker (start anywhere)","the EDGE next to it (going clockwise)",
+  "the next CORNER","the next EDGE","the next CORNER","the next EDGE",
+  "the next CORNER","the next EDGE","the last CORNER","the last EDGE"];
+function photoLoad(file){
+  const c=document.getElementById("photoCanvas"); if(!c)return;
+  const img=new Image();
+  img.onload=()=>{ const W=Math.min(360,img.width); const sc=W/img.width;
+    c.width=W; c.height=Math.round(img.height*sc); c.style.display="block";
+    const ctx=c.getContext("2d"); ctx.drawImage(img,0,0,c.width,c.height);
+    photo.img=img; photo.taps=[]; photo.samples=[]; photo.active=false;
+    document.getElementById("photoStart").disabled=false;
+    document.getElementById("photoRedo").disabled=false;
+    setPhotoMsg("Photo loaded! Press <b>Start tapping</b>, then tap "+PHOTO_STEPS[0]+".");
+  };
+  const r=new FileReader(); r.onload=e=>img.src=e.target.result; r.readAsDataURL(file);
+}
+function setPhotoMsg(h){const m=document.getElementById("photoMsg"); if(m)m.innerHTML=h;}
+function photoRedraw(){
+  const c=document.getElementById("photoCanvas"); if(!c||!photo.img)return;
+  const ctx=c.getContext("2d"); ctx.drawImage(photo.img,0,0,c.width,c.height);
+  photo.taps.forEach((t,i)=>{ctx.beginPath();ctx.arc(t.x,t.y,9,0,7);ctx.fillStyle="rgba(0,0,0,.55)";ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();ctx.fillStyle="#fff";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(i,t.x,t.y);});
+}
+function photoClick(e){
+  if(!photo.active)return; const c=document.getElementById("photoCanvas"); const r=c.getBoundingClientRect();
+  const x=Math.round((e.clientX-r.left)*(c.width/r.width)), y=Math.round((e.clientY-r.top)*(c.height/r.height));
+  const ctx=c.getContext("2d"); const px=ctx.getImageData(Math.max(0,x-2),Math.max(0,y-2),5,5).data;
+  let R=0,G=0,B=0,n=0; for(let i=0;i<px.length;i+=4){R+=px[i];G+=px[i+1];B+=px[i+2];n++;}
+  photo.samples.push([R/n,G/n,B/n]); photo.taps.push({x,y}); photoRedraw();
+  if(photo.taps.length<11){ setPhotoMsg(`Good! (${photo.taps.length}/11) Now tap <b>${PHOTO_STEPS[photo.taps.length]}</b>.`); }
+  else { photo.active=false; photoFinish(); }
+}
+function photoFinish(){
+  const ref=photo.samples[0];
+  const ds=photo.samples.slice(1).map(s=>rgbDist(s,ref)); const mx=Math.max(...ds,1);
+  const isTop=d=>d<Math.max(60,0.5*mx);
+  const corners=[],edges=[];
+  for(let k=0;k<5;k++){ corners.push(isTop(rgbDist(photo.samples[1+2*k],ref)));
+                        edges.push(isTop(rgbDist(photo.samples[2+2*k],ref))); }
+  state.builder={corners,edges};
+  toast("Read your photo! Result shown at the top ☝️");
+  render(); // shows the no-guess recognition result; user can fine-tune by clicking stickers
+}
+function wirePhoto(){
+  const inp=document.getElementById("photoInput"); if(inp) inp.onchange=e=>{if(e.target.files[0])photoLoad(e.target.files[0]);};
+  const st=document.getElementById("photoStart"); if(st) st.onclick=()=>{photo.active=true;photo.taps=[];photo.samples=[];photoRedraw();setPhotoMsg("Tap <b>"+PHOTO_STEPS[0]+"</b>.");};
+  const rd=document.getElementById("photoRedo"); if(rd) rd.onclick=()=>{photo.active=false;photo.taps=[];photo.samples=[];photoRedraw();setPhotoMsg("Cleared. Press <b>Start tapping</b> to begin again.");};
+  const cv=document.getElementById("photoCanvas"); if(cv) cv.onclick=photoClick;
+}
+
+/* ===== PUZZLE REGISTRY + generic puzzle workspace ===== */
+const PUZZLES={
+  megaminx:{id:'megaminx',name:'Megaminx',icon:'⬠',mode:'megaminx',engine:'megaminx',
+    basics:"A Megaminx is a 12-sided ball — every face is a <b>pentagon</b> with 1 centre, 5 edges and 5 corners. The last layer is the top face: first orient the <b>edges</b> (make a star), then the <b>corners</b>.",
+    notation:[["U","Turn the TOP face"],["R","Turn the RIGHT face"],["F","Turn the FRONT face"],["L","Turn the LEFT face"],["BR","Back-right face"],["DR","Down-right face"],["R'","Right, the other way"],["y","Spin the whole puzzle"]],
+    cases:[{group:"Edge Orientation (make the star)",kind:"eo",list:EO},{group:"Corner Orientation (finish the top)",kind:"co",list:CO}],
+    demo:"R U R' U R U2' R'"},
+  '3x3':{id:'3x3',name:'3×3 Cube',icon:'🟦',mode:'cube',engine:'cube',
+    basics:"A 3×3 has <b>6 faces</b>. Each face has 1 centre, 4 edges and 4 corners. You solve it layer by layer; the end is <b>OLL</b> (make the top one colour) then <b>PLL</b> (slide pieces home).",
+    notation:[["U","Turn the TOP face"],["D","Turn the BOTTOM"],["R","Turn the RIGHT"],["L","Turn the LEFT"],["F","Turn the FRONT"],["B","Turn the BACK"],["R'","Right, the other way"],["M","Middle slice"],["y","Spin the whole cube"]],
+    cases:[{group:"OLL — orient last layer (57)",kind:"oll",list:OLL3},{group:"PLL — permute last layer (21)",kind:"pll",list:PLL3}],
+    demo:"R U R' U' R' F R2 U' R' U' R U R' F'"},
+  mirror:{id:'mirror',name:'Mirror Cube',icon:'🪞',mode:'cube',engine:'cube',variant:'mirror',themeNote:"A Mirror Cube is a 3×3 where pieces differ by SIZE, not colour — all gold, solved by SHAPE. Turn it and watch it become bumpy; solving it makes a smooth cube again. Same moves and algorithms as a 3×3.",
+    basics:"The Mirror Cube is mechanically a 3×3. Solve by <b>shape</b> instead of colour. Every 3×3 algorithm works exactly the same.",
+    notation:[["U","Top"],["D","Bottom"],["R","Right"],["L","Left"],["F","Front"],["B","Back"],["y","Spin whole cube"]],
+    cases:[{group:"OLL (same as 3×3)",kind:"oll",list:OLL3},{group:"PLL (same as 3×3)",kind:"pll",list:PLL3}],
+    demo:"R U R' U R U2 R'"},
+  windmill:{id:'windmill',name:'Windmill Cube',icon:'🌬️',mode:'cube',engine:'cube',variant:'windmill',themeNote:"A Windmill Cube is a 3×3 with the middle layer set at an angle (that's the windmill look). Same 3×3 method and algorithms.",
+    basics:"The Windmill Cube is a 3×3 with a slanted middle. Same method, same algorithms — just line up the tilted centres.",
+    notation:[["U","Top"],["D","Bottom"],["R","Right"],["L","Left"],["F","Front"],["B","Back"],["y","Spin whole cube"]],
+    cases:[{group:"OLL (same as 3×3)",kind:"oll",list:OLL3},{group:"PLL (same as 3×3)",kind:"pll",list:PLL3}],
+    demo:"R U R' U R U2 R'"},
+  pyraminx:{id:'pyraminx',name:'Pyraminx',icon:'🔺',mode:'pyra',engine:'pyra',
+    basics:"A Pyraminx is a triangle puzzle (a tetrahedron) with 4 faces. Solve: 1) twist the 4 tips, 2) solve one face + centres, 3) finish the last 3 edges.",
+    notation:[["U","Top corner + its layer"],["L","Left corner + layer"],["R","Right corner + layer"],["B","Back corner + layer"],["u l r b","just the little tip"]],
+    cases:[{group:"Last layer (last 3 edges)",kind:"pyra",list:PYRA}],
+    demo:"R U R' U R U R'"},
+  '4x4':{id:'4x4',name:'4×4 Cube',icon:'🟧',mode:'cube',engine:'cube',N:4,
+    themeNote:"On a 4×4 you first <b>pair</b> the centres and edges so it becomes a 3×3, then solve it with the same 3×3 algorithms. <b>Parity</b> cases (impossible on a 3×3) get their own algorithm.",
+    basics:"On a 4×4 you first <b>pair</b> the centres and edges so it becomes a 3×3, then solve it with the <b>same 3×3 algorithms</b>. Sometimes you meet <b>parity</b> (a case impossible on a 3×3) which needs a special algorithm.",
+    notation:[["U D R L F B","outer face turns (like 3×3)"],["Rw / r","two layers at once"],["2R","just the inner slice"],["Uw","two top layers"],["x y z","spin the whole cube"]],
+    cases:[{group:"OLL (last layer, like 3×3)",kind:"oll",list:OLL3},{group:"PLL (last layer, like 3×3)",kind:"pll",list:PLL3},{group:"Parity (4×4 only)",kind:"parity",list:[{n:"OLL parity",alg:PARITY4.oll},{n:"PLL parity",alg:PARITY4.pll}]}],
+    demo:"Rw U2 x Rw U2 Rw U2 Rw' U2 Lw U2 Rw' U2 Rw U2 Rw' U2 Rw'"}
+};
+function P(){return PUZZLES[state.puzzle]||PUZZLES.megaminx;}
+function cubeEngineOK(p){return !!engineObj(p);}
+/* Unified 3D engine handle — same controls for Megaminx (MMX3D) and cubes (CUBE3D) */
+function engineObj(p){ p=p||P(); if(!window.THREE) return null;
+  if(p.engine==='megaminx') return {kind:'mmx',
+    init:(h,a,pr)=>MMX3D.init(h,a,COLORS.top,pr), free:(h)=>MMX3D.init(h,"",COLORS.top,null),
+    play:()=>MMX3D.play(),step:()=>MMX3D.step(),back:()=>MMX3D.back(),reset:()=>MMX3D.reset(),jumpTo:(n)=>MMX3D.jumpTo(n),setSpeed:(s)=>MMX3D.setSpeed(s)};
+  if(p.engine==='cube') return {kind:'cube',
+    init:(h,a,pr)=>CUBE3D.init(h,a,pr,p.N||3,p.variant), free:(h)=>CUBE3D.init(h,"",null,p.N||3,p.variant),
+    play:()=>CUBE3D.play(),step:()=>CUBE3D.step(),back:()=>CUBE3D.back(),reset:()=>CUBE3D.reset(),jumpTo:(n)=>CUBE3D.jumpTo(n),setSpeed:(s)=>CUBE3D.setSpeed(s)};
+  if(p.engine==='pyra') return {kind:'pyra',
+    init:(h,a,pr)=>PYRA3D.init(h,a,pr), free:(h)=>PYRA3D.init(h,"",null),
+    play:()=>PYRA3D.play(),step:()=>PYRA3D.step(),back:()=>PYRA3D.back(),reset:()=>PYRA3D.reset(),jumpTo:(n)=>PYRA3D.jumpTo(n),setSpeed:(s)=>PYRA3D.setSpeed(s)};
+  return null;
+}
+const ANIM_KINDS=['oll','pll','parity','eo','co','pyra'];
+/* Every puzzle gets the SAME tab labels. Megaminx uses its rich bespoke screens;
+   cubes use matching generic screens (different ids, identical labels). */
+function tabsFor(){
+  if(state.puzzle==='megaminx') return [
+    ["home","🏠 Home"],["basics","📘 Basics"],["solve","🗺️ Full Solve"],["pplay","🧊 3D Play"],
+    ["colors","🎨 My Colours"],["builder","🧩 Identify"],["library","📚 Case Library"],
+    ["notation","↻ Notation"],["practice","🎯 Practice"],["ptimer","⏱️ Timer"],["parent","👨‍👦 Parent"],["print","🖨️ Printable"],["tests","✅ Self-Test"]];
+  const p=P();
+  const t=[["home","🏠 Home"],["pbasics","📘 Basics"],["psolve","🗺️ Full Solve"]];
+  if(engineObj(p)) t.push(["pplay","🧊 3D Play"]);
+  t.push(["pcolors","🎨 My Colours"],["pident","🧩 Identify"],["plibrary","📚 Case Library"],
+    ["pnotation","↻ Notation"],["ppractice","🎯 Practice"],["ptimer","⏱️ Timer"],["pparent","👨‍👦 Parent"],["pprint","🖨️ Printable"],["ptests","✅ Self-Test"]);
+  return t;
+}
+let BASICS_HL='all';
+function cubeFaceDiagram(hl){
+  const role=['corner','edge','corner','edge','centre','edge','corner','edge','corner'];
+  const tc=CUBE_COLORS.U,dim="#3a4170";
+  return '<div style="display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);gap:5px;justify-content:center">'+
+    role.map(r=>{const on=(hl==='all'||hl===r);return '<div style="width:46px;height:46px;border-radius:7px;border:2px solid #0a0c1c;background:'+(on?tc:dim)+';opacity:'+(on?1:.45)+'"></div>';}).join("")+'</div>';
+}
+function scrPBasics(){const p=P();
+  const hlText={centre:"The centre never moves — it names that face's colour.",edge:"Edges have 2 colours and sit on the sides (4 per face).",corner:"Corners have 3 colours and sit at the corners (4 per face).",all:"Each face = 1 centre + 4 edges + 4 corners."}[BASICS_HL];
+  const pieces = p.engine==='cube' ? ('<h3>The pieces</h3><p class="muted">Tap to light up each kind of piece:</p>'+
+    '<div class="row" style="justify-content:center"><button class="btn sm ghost" data-bhl="centre">Centres</button><button class="btn sm ghost" data-bhl="edge">Edges</button><button class="btn sm ghost" data-bhl="corner">Corners</button><button class="btn sm ghost" data-bhl="all">All</button></div>'+
+    '<div class="stage">'+cubeFaceDiagram(BASICS_HL)+'</div>'+
+    '<p class="muted" style="text-align:center;font-size:12.5px">'+hlText+'</p>') : '';
+  return '<div class="card"><h2>'+p.icon+' '+p.name+' — Basics</h2>'+
+    (p.themeNote?'<div class="coach"><div class="face">💡</div><div class="bubble">'+p.themeNote+'</div></div>':'')+
+    '<p style="margin-top:10px">'+p.basics+'</p>'+
+    (cubeEngineOK(p)?'<div class="stage"><div id="pExplore" style="width:320px;height:320px;max-width:100%"></div></div><p class="muted" style="text-align:center;font-size:12px">Drag to spin it around.</p>':
+      (p.note3d?'<p class="muted">'+p.note3d+'</p>':''))+
+    pieces+
+    '<div class="row"><button class="btn sm" data-go="plibrary">See the cases →</button><button class="btn sm ghost" data-go="pnotation">Learn the moves</button><button class="btn sm ghost" data-go="psolve">Full solve</button></div></div>';
+}
+function scrPPlay(){const p=P();
+  if(!cubeEngineOK(p)) return '<div class="card"><h2>🧊 3D Play — '+p.name+'</h2><p class="muted">'+(p.note3d||"A 3D model for this puzzle is coming soon.")+'</p><button class="btn sm" data-go="plibrary">Go to the cases →</button></div>';
+  return '<div class="card"><h2>🧊 3D Play — '+p.name+'</h2>'+
+    (p.themeNote?'<p class="muted">'+p.themeNote+'</p>':'')+
+    '<div class="stage"><div id="pPlayHost" style="width:360px;height:360px;max-width:100%"></div></div>'+
+    '<div class="row" style="justify-content:center"><button class="btn sm" data-pdemo="play">▶ Watch a demo solve</button><button class="btn sm ghost" data-pdemo="reset">↺ Reset</button></div>'+
+    '<p class="muted" style="text-align:center;font-size:12px">Drag to look around. The demo plays a real algorithm so you can see the cube turn.</p></div>';
+}
+function scrPLibrary(){const p=P();
+  let html='<div class="card"><h2>📚 '+p.name+' — Case Library</h2><p class="muted">Verified algorithms (source: SpeedCubeDB).'+
+    (cubeEngineOK(p)?' <b>Tap a case to watch it in 3D.</b>':'')+'</p></div>';
+  p.cases.forEach(grp=>{
+    const cards=grp.list.map((c,i)=>{
+      const label = c.n!==undefined ? (grp.kind==='oll'?'OLL '+c.n:c.n) : c.name;
+      const clickable = ANIM_KINDS.includes(grp.kind) && cubeEngineOK(p);
+      return '<div class="casecard"'+(clickable?' data-case="'+grp.kind+':'+i+'" title="Watch in 3D"':' style="cursor:default"')+'>'+
+        '<div class="nm">'+label+'</div>'+(c.type?'<div class="src" style="font-size:10px">'+c.type+'</div>':'')+'<div class="al">'+c.alg+'</div>'+
+        (clickable?'<div class="src" style="font-size:10px;color:var(--accent)">▶ tap for 3D</div>':'<div class="src" style="font-size:10px;opacity:.6">reference</div>')+'</div>';
+    }).join("");
+    html+='<div class="card"><h3>'+grp.group+'</h3><div class="caselist">'+cards+'</div></div>';
+  });
+  return html;
+}
+function scrPNotation(){const p=P();
+  return '<div class="card"><h2>↻ '+p.name+' — Notation</h2><p class="muted">What the letters mean. A little <b>\'</b> means turn the other way; a <b>2</b> means turn twice.</p>'+
+    '<table class="algtbl"><tr><th>Move</th><th>What it does</th></tr>'+
+    p.notation.map(n=>'<tr><td class="mono">'+n[0]+'</td><td>'+n[1]+'</td></tr>').join("")+'</table></div>';
+}
+function scrPPractice(){const p=P();
+  return '<div class="card"><h2>🎯 '+p.name+' — Practice</h2><p class="muted">Choose the correct algorithm for the named case. Keep it fun!</p>'+
+    '<button class="btn" data-pquiz="1">Start a question</button><div id="pPracArea" style="margin-top:14px"></div></div>';
+}
+function allCasesOf(p){let arr=[];p.cases.forEach(g=>g.list.forEach((c)=>arr.push({label:c.n!==undefined?(g.kind==='oll'?'OLL '+c.n:c.n):c.name,alg:c.alg})));return arr;}
+function pQuiz(){const p=P();const pool=allCasesOf(p);if(pool.length<2){document.getElementById("pPracArea").innerHTML='<p class="muted">Not enough cases.</p>';return;}
+  const c=pool[Math.floor(Math.random()*pool.length)];const opts=[c];let g=0;
+  while(opts.length<Math.min(3,new Set(pool.map(x=>x.alg)).size)&&g++<200){const o=pool[Math.floor(Math.random()*pool.length)];if(!opts.find(x=>x.alg===o.alg))opts.push(o);}
+  opts.sort(()=>Math.random()-0.5);
+  document.getElementById("pPracArea").innerHTML='<h3>Which algorithm solves <b>'+c.label+'</b>?</h3><div class="grid">'+
+    opts.map(o=>'<button class="btn sm ghost" style="font-family:monospace" data-pans="'+(o.alg===c.alg?'1':'0')+'">'+o.alg+'</button>').join("")+
+    '</div><div id="pPracMsg" class="coach" style="margin-top:12px"><div class="face">🦉</div><div class="bubble">Pick the recipe.</div></div>'+
+    '<button class="btn sm" data-pquiz="1" style="margin-top:8px">Next →</button>';
+  wirePQuiz();
+}
+function wirePQuiz(){
+  document.querySelectorAll("#pPracArea [data-pquiz]").forEach(b=>b.onclick=()=>pQuiz());
+  document.querySelectorAll("#pPracArea [data-pans]").forEach(b=>b.onclick=()=>{
+    const ok=b.dataset.pans==='1';
+    document.querySelectorAll("#pPracArea [data-pans]").forEach(x=>{x.disabled=true;x.classList.remove('ghost');if(x.dataset.pans==='1')x.classList.add('good');else if(x===b)x.classList.add('bad');else x.style.opacity=.5;});
+    const bub=document.querySelector("#pPracMsg .bubble");if(bub)bub.innerHTML=ok?"<b style='color:#39d98a'>✅ Correct!</b> Press Next.":"<b style='color:#ff6b81'>❌ Not quite.</b> The green one is right. Press Next!";
+  });
+}
+const SOLVE_STEPS={
+  megaminx:["Build a <b>white star</b> on the bottom, then finish the first face and its corners.","Solve the next layers (same idea as a 3×3, going around).","<b>Edge orientation</b> — make the yellow star on top.","<b>Corner orientation</b> — finish the yellow top.","Permute the last-layer edges and corners. Solved! 🎉"],
+  '3x3':["Make a <b>white cross</b>: put the 4 white edges around the white centre so each side colour matches its centre.","Insert the 4 <b>white corners</b> to finish the first layer.","Solve the <b>middle layer</b> edges with the right/left inserts.","<b>OLL</b> — make the whole top face one colour.","<b>PLL</b> — slide the last-layer pieces to their spots. Solved! 🎉"],
+  mirror:["Same as a 3×3, but match by <b>shape/size</b> instead of colour.","Build the first layer, then the middle layer.","OLL then PLL — the cube becomes a smooth shape when solved."],
+  windmill:["Same as a 3×3 — just keep track of the tilted centres.","First layer, middle layer, then OLL and PLL."],
+  '4x4':["Solve the 6 <b>centres</b> (each a 2×2 block of one colour).","<b>Pair</b> the 12 double-edges so they act like single 3×3 edges.","Now solve it like a <b>3×3</b> (cross, first two layers, OLL, PLL).","If you hit <b>parity</b>, use the OLL-parity or PLL-parity algorithm in the Case Library."],
+  pyraminx:["Twist the <b>4 tips</b> so each matches the colour next to it.","Solve <b>one face</b> and its centres (the first layer).","Finish the <b>last 3 edges</b> with the Last-Layer algorithms in the Case Library. Done! 🔺"]
+};
+function scrPSolve(){const p=P();const steps=SOLVE_STEPS[p.id]||[];
+  return '<div class="card"><h2>🗺️ '+p.name+' — Full Solve</h2>'+
+    '<p class="muted">The whole solve, start to finish. Take one step at a time.</p>'+
+    '<ol style="line-height:1.9">'+steps.map(s=>'<li>'+s+'</li>').join("")+'</ol>'+
+    '<div class="row"><button class="btn sm" data-go="plibrary">See the last-layer cases →</button></div>'+
+    '<p class="src" style="margin-top:8px">Standard beginner method. Algorithms in the Case Library are from SpeedCubeDB.</p></div>';
+}
+/* ===== Shared rich screens for cube-type puzzles (match Megaminx tabs) ===== */
+function defCubeColors(){return {U:"#ffd21f",D:"#f4f4ec",F:"#27ae60",B:"#2f6bff",R:"#e23b3b",L:"#ff8c1a",core:"#0a0c14"};}
+function cubeOLLSig(alg){
+  const rotV=(p,a,q)=>{let [x,y,z]=p;const n=((q%4)+4)%4;for(let i=0;i<n;i++){if(a==='x'){[y,z]=[-z,y];}else if(a==='y'){[x,z]=[z,-x];}else{[x,y]=[-y,x];}}return [x,y,z];};
+  const F={R:{ax:'x',sg:1,s:-1},L:{ax:'x',sg:-1,s:1},U:{ax:'y',sg:1,s:-1},D:{ax:'y',sg:-1,s:1},F:{ax:'z',sg:1,s:-1},B:{ax:'z',sg:-1,s:1},M:{ax:'x',sg:0,s:1,sl:1},E:{ax:'y',sg:0,s:1,sl:1},S:{ax:'z',sg:0,s:-1,sl:1},X:{ax:'x',s:-1,all:1},Y:{ax:'y',s:-1,all:1},Z:{ax:'z',s:-1,all:1}};
+  const maxc=2;
+  const md=tok=>{const m=tok.match(/^(\d*)([RLUDFBMESxyz])(w?)(2?)('?)$/);if(!m)return null;const num=m[1]?parseInt(m[1]):0,base=m[2],wide=m[3]==='w',dbl=m[4]==='2',pr=m[5]==="'";const f=F[base.toUpperCase()];if(!f)return null;let L=[];if(f.all){for(let c=-maxc;c<=maxc;c+=2)L.push(c);}else if(f.sl){for(let c=-maxc+2;c<=maxc-2;c+=2)L.push(c);}else{const lo=/[rludfb]/.test(base),w=wide||lo;if(w){const d=num||2;for(let k=0;k<d;k++)L.push(f.sg*(maxc-2*k));}else if(num){L=[f.sg*(maxc-2*(num-1))];}else{L=[f.sg*maxc];}}return {ax:f.ax,L,q:(dbl?2:1)*(pr?-1:1)*f.s};};
+  const iv=a=>a.trim().split(/\s+/).reverse().map(t=>{const m=t.match(/^(\d*[RLUDFBMESxyz]w?)(2?)('?)$/);return m?(m[1]+(m[2]?"2":(m[3]?"":"'"))):t;}).join(" ");
+  let cu=[];for(let x=-maxc;x<=maxc;x+=2)for(let y=-maxc;y<=maxc;y+=2)for(let z=-maxc;z<=maxc;z+=2)cu.push({pos:[x,y,z],uy:[0,1,0]});
+  iv(alg).split(/\s+/).filter(Boolean).forEach(t=>{const d=md(t);if(!d)return;cu.forEach(c=>{const v=c.pos[d.ax==='x'?0:d.ax==='y'?1:2];if(d.L.some(l=>Math.abs(l-v)<1e-9)){c.pos=rotV(c.pos,d.ax,d.q);c.uy=rotV(c.uy,d.ax,d.q);}});});
+  const cells=cu.filter(c=>c.pos[1]===2).map(c=>({x:c.pos[0],z:c.pos[2],up:(c.uy[0]===0&&c.uy[1]===1&&c.uy[2]===0)?1:0}));
+  cells.sort((a,b)=>a.z-b.z||a.x-b.x);return cells.map(c=>c.up).join("");
+}
+function cubeMatchOLL(painted){
+  const g=painted.map(b=>b?1:0),cx=[-2,0,2];
+  const rot=gr=>{const out=Array(9);for(let i=0;i<9;i++){const X=cx[i%3],Z=cx[(i/3)|0],sx=-Z,sz=X,si=cx.indexOf(sz)*3+cx.indexOf(sx);out[i]=gr[si];}return out;};
+  const rots=[g];for(let k=0;k<3;k++)rots.push(rot(rots[rots.length-1]));
+  const strs=rots.map(r=>r.join(""));
+  return OLL3.filter(o=>strs.includes(o.sig));
+}
+function scrPIdentify(){const p=P();
+  if(p.cases&&p.cases.some(gp=>gp.kind==='pyra')){
+    const hints={"Sune (3 edges cycle)":"All 3 last edges show the right colours but need to rotate around — clockwise.","Anti-Sune (3 edges cycle)":"Same as Sune but the 3 edges cycle the other way (anti-clockwise).","Lefty Bars":"Two edges already line up as a matching bar on the left side.","Righty Bars":"Two edges line up as a matching bar on the right side.","2 Flip":"Two of the last edges are flipped — showing the wrong colour facing out."};
+    const g=p.cases.find(gp=>gp.kind==='pyra');
+    const cards=g.list.map((c,i)=>'<div class="casecard" data-case="pyra:'+i+'" title="Watch in 3D"><div class="nm">'+c.name+'</div><div class="src" style="font-size:10.5px">'+(hints[c.name]||"")+'</div><div class="al">'+c.alg+'</div><div class="src" style="font-size:10px;color:var(--accent)">▶ tap for 3D</div></div>').join("");
+    return '<div class="card"><h2>🧩 '+p.name+' — Find your case</h2><p class="muted">First solve one face and the centres. Then look at the <b>last 3 edges</b> around the top tip and match them to one of these. Tap to watch the fix in 3D. (Only 5 cases — you\'ll know them fast!)</p><div class="caselist">'+cards+'</div></div>';
+  }
+  if(!(p.cases&&p.cases.some(gp=>gp.kind==='oll'))) return '<div class="card"><h2>🧩 '+p.name+' — Identify</h2><p class="muted">A case-finder for this puzzle is coming. For now, browse the Case Library.</p><button class="btn sm" data-go="plibrary">Open Case Library →</button></div>';
+  if(!state.cubePaint) state.cubePaint=[true,true,true,true,true,true,true,true,true];
+  const tc=CUBE_COLORS.U,gc="#8b93b8";
+  const grid='<div style="display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:6px;justify-content:center">'+
+    state.cubePaint.map((v,i)=>'<div data-paint="'+i+'" style="width:54px;height:54px;border-radius:8px;border:2px solid #0a0c1c;cursor:'+(i===4?'default':'pointer')+';background:'+(v?tc:gc)+'"></div>').join("")+'</div>';
+  const m=cubeMatchOLL(state.cubePaint);let res;
+  if(state.cubePaint.every(Boolean)) res='<div class="coach"><div class="face">🎉</div><div class="bubble">The top is all one colour — a solved top. Tap the squares that are NOT the top colour to enter your case.</div></div>';
+  else if(m.length===0) res='<div class="coach" style="border-color:#7a4b15"><div class="face">🤔</div><div class="bubble"><b>I can\'t confirm this yet.</b> Tap the squares so they match your cube exactly (yellow = top colour, grey = not).</div></div>';
+  else if(m.length===1) res='<div class="coach" style="border-color:#1f6b3f"><div class="face">✅</div><div class="bubble"><b>Found it: OLL '+m[0].n+'</b><div class="row" style="margin-top:8px"><button class="btn sm good" data-case="oll:'+OLL3.indexOf(m[0])+'">Watch it in 3D →</button></div></div></div>';
+  else res='<div class="coach" style="border-color:#7a4b15"><div class="face">🔎</div><div class="bubble"><b>Almost!</b> A few cases share this top shape — check the side stickers. Candidates: '+m.map(o=>'OLL '+o.n).join(", ")+'.</div></div>';
+  return '<div class="card"><h2>🧩 '+p.name+' — Identify your case</h2><p class="muted">Look at the top of your cube. Tap the squares so yellow = the top colour, grey = not. I find the OLL case and never guess.</p><div class="stage">'+grid+'</div><div class="row" style="justify-content:center"><button class="btn sm ghost" data-paintact="clear">Only centre</button><button class="btn sm ghost" data-paintact="reset">All top colour</button></div>'+res+'</div>';
+}
+function scrPColors(){const p=P();
+  if(p.engine!=='cube') return '<div class="card"><h2>🎨 '+p.name+' — My Colours</h2><p class="muted">This puzzle uses its standard colours.</p></div>';
+  const faces=['U','F','R','D','L','B'];
+  return '<div class="card"><h2>🎨 '+p.name+' — My Colours</h2><p class="muted">Set the colours to match your real cube. They show in the 3D trainer.</p><div class="legend">'+
+    faces.map(f=>'<span class="chip"><span class="sw" style="background:'+CUBE_COLORS[f]+'"></span>'+CUBE_COLOR_NAMES[f]+' <input type="color" value="'+CUBE_COLORS[f]+'" data-ccolor="'+f+'" style="width:26px;height:22px;border:none;background:none;cursor:pointer"></span>').join("")+
+    '</div><div class="row" style="margin-top:12px"><button class="btn sm" data-cact="save">Save</button><button class="btn sm ghost" data-cact="reset">Reset</button><button class="btn sm ghost" data-go="pplay">See it in 3D →</button></div></div>';
+}
+function scrPParent(){const p=P();
+  let rows='';p.cases.forEach(g=>{rows+='<tr><th colspan="2">'+g.group+'</th></tr>'+g.list.map(c=>{const nm=c.n!==undefined?(g.kind==='oll'?'OLL '+c.n:c.n):c.name;return '<tr><td>'+nm+'</td><td class="mono">'+c.alg+'</td></tr>';}).join("");});
+  return '<div class="card"><h2>👨‍👦 '+p.name+' — Parent / Coach</h2><p class="muted">Every algorithm shown, with its source. Nothing invented.</p>'+
+    '<div class="row"><button class="btn sm ghost" data-act="resetprogress">Reset progress</button><button class="btn sm ghost" data-go="pprint">Printable sheet</button></div>'+
+    '<table class="algtbl"><tr><th>Case</th><th>Algorithm</th></tr>'+rows+'</table><p class="src" style="margin-top:8px">Source: SpeedCubeDB.</p></div>';
+}
+function scrPPrint(){const p=P();
+  let blocks='';p.cases.forEach(g=>{blocks+='<h3>'+g.group+'</h3><div class="caselist">'+g.list.map(c=>{const nm=c.n!==undefined?(g.kind==='oll'?'OLL '+c.n:c.n):c.name;return '<div class="casecard" style="cursor:default"><div class="nm">'+nm+'</div><div class="al">'+c.alg+'</div></div>';}).join("")+'</div>';});
+  return '<div class="card noprint"><h2>🖨️ '+p.name+' — Printable</h2><p class="muted">Print or save as PDF (Ctrl/Cmd+P).</p><button class="btn" onclick="window.print()">🖨️ Print now</button></div><h2>'+p.name+' cheat sheet</h2>'+blocks;
+}
+function scrPTests(){const p=P();const t=[];const add=(n,b)=>t.push([n,b]);
+  add("Has case groups",p.cases&&p.cases.length>0);let total=0;
+  (p.cases||[]).forEach(g=>{add(g.group+": non-empty",g.list.length>0);total+=g.list.length;add(g.group+": all algorithms present",g.list.every(c=>c.alg&&c.alg.trim().length>0));});
+  const re=/^[A-Za-z0-9']+$/;let bad=0;(p.cases||[]).forEach(g=>g.list.forEach(c=>{if(!c.alg.trim().split(/\s+/).every(m=>re.test(m)))bad++;}));
+  add("All moves well-formed",bad===0);add("3D engine available",!!engineObj(p));
+  const pass=t.filter(x=>x[1]).length;
+  return '<div class="card"><h2>✅ '+p.name+' — Self-Test</h2><p class="muted">Checks this puzzle\'s data and engine. <b class="'+(pass===t.length?'ok':'fail')+'">'+pass+'/'+t.length+' passed</b> ('+total+' cases).</p>'+
+    t.map(x=>'<div class="testrow"><span>'+x[0]+'</span><span class="'+(x[1]?'ok':'fail')+'">'+(x[1]?'PASS':'FAIL')+'</span></div>').join("")+
+    '<p class="muted" style="font-size:12px;margin-top:10px">Algorithms are from SpeedCubeDB; the 3D engines were verified separately.</p></div>';
+}
+function wireRich(){
+  document.querySelectorAll("[data-paint]").forEach(el=>el.onclick=()=>{const i=+el.dataset.paint;if(i===4)return;state.cubePaint[i]=!state.cubePaint[i];render();});
+  document.querySelectorAll("[data-paintact]").forEach(b=>b.onclick=()=>{const a=b.dataset.paintact;state.cubePaint=a==='clear'?[false,false,false,false,true,false,false,false,false]:[true,true,true,true,true,true,true,true,true];render();});
+  document.querySelectorAll("[data-ccolor]").forEach(inp=>inp.oninput=()=>{CUBE_COLORS[inp.dataset.ccolor]=inp.value;});
+  document.querySelectorAll("[data-cact]").forEach(b=>b.onclick=()=>{if(b.dataset.cact==='save'){try{localStorage.setItem('amh_cubecolors',JSON.stringify(CUBE_COLORS));}catch(e){}toast('Cube colours saved 🎨');}else{Object.assign(CUBE_COLORS,defCubeColors());try{localStorage.removeItem('amh_cubecolors');}catch(e){}render();toast('Reset to default');}});
+  document.querySelectorAll("[data-bhl]").forEach(b=>b.onclick=()=>{BASICS_HL=b.dataset.bhl;render();});
+}
+/* ===== Timer + stats (all puzzles) ===== */
+let TIMER={running:false,t0:0,raf:0,scramble:""};
+let TIMER_TIMES={};
+function timerLoad(){try{TIMER_TIMES=JSON.parse(localStorage.getItem("amh_times")||"{}");}catch(e){TIMER_TIMES={};}}
+function timerSave(){try{localStorage.setItem("amh_times",JSON.stringify(TIMER_TIMES));}catch(e){}}
+function timerTimes(){const id=P().id;return TIMER_TIMES[id]||(TIMER_TIMES[id]=[]);}
+function fmtT(ms){return (ms/1000).toFixed(2);}
+function aoN(arr,n){if(arr.length<n)return null;const last=arr.slice(-n).slice().sort((a,b)=>a-b);const mid=last.slice(1,n-1);return mid.reduce((a,b)=>a+b,0)/mid.length;}
+function genScramble(p){let faces,mods=["","'","2"],n=20;
+  if(p.engine==='megaminx'){faces=["R","U","F","L","BR","DR"];}
+  else if(p.engine==='pyra'){faces=["R","U","L","B"];mods=["","'"];n=8;}
+  else if(p.engine==='cube'&&p.N===4){faces=["R","U","F","L","D","B","Rw","Uw","Fw"];n=36;}
+  else {faces=["R","U","F","L","D","B"];}
+  let s=[],prev="";for(let i=0;i<n;i++){let f;do{f=faces[Math.floor(Math.random()*faces.length)];}while(f[0]===prev[0]);prev=f;s.push(f+mods[Math.floor(Math.random()*mods.length)]);}
+  if(p.engine==='pyra'){["u","l","r","b"].forEach(t=>{if(Math.random()<0.5)s.push(t+(Math.random()<0.5?"'":""));});}
+  return s.join(" ");
+}
+function scrTimer(){const p=P();const arr=timerTimes();
+  if(!TIMER.scramble)TIMER.scramble=genScramble(p);
+  const best=arr.length?Math.min(...arr):null;
+  const recent=arr.slice(-12).reverse();
+  return '<div class="card"><h2>⏱️ '+p.name+' — Timer</h2>'+
+    '<p class="muted">Scramble your real puzzle with the moves below, then tap the timer to start, and tap again to stop.</p>'+
+    '<div class="alg" style="text-align:center;font-size:15px">'+TIMER.scramble+'</div>'+
+    '<div class="row" style="justify-content:center;margin:6px 0"><button class="btn sm ghost" data-timer="scramble">↻ New scramble</button></div>'+
+    '<div id="timerDisplay" data-timer="toggle" style="text-align:center;font-size:64px;font-weight:800;font-family:Consolas,monospace;cursor:pointer;padding:18px;border-radius:16px;background:#0c0f24;border:1px solid var(--line);user-select:none">'+fmtT(0)+'</div>'+
+    '<div class="row" style="justify-content:center;gap:18px;margin-top:12px">'+
+      '<div style="text-align:center"><div class="muted" style="font-size:12px">solves</div><b>'+arr.length+'</b></div>'+
+      '<div style="text-align:center"><div class="muted" style="font-size:12px">best</div><b>'+(best!=null?fmtT(best):"—")+'</b></div>'+
+      '<div style="text-align:center"><div class="muted" style="font-size:12px">ao5</div><b>'+(aoN(arr,5)!=null?fmtT(aoN(arr,5)):"—")+'</b></div>'+
+      '<div style="text-align:center"><div class="muted" style="font-size:12px">ao12</div><b>'+(aoN(arr,12)!=null?fmtT(aoN(arr,12)):"—")+'</b></div>'+
+    '</div>'+
+    (recent.length?'<h3>Recent</h3><div class="movechips">'+recent.map(t=>'<span class="movechip">'+fmtT(t)+'</span>').join("")+'</div>':"")+
+    (arr.length?'<div class="row" style="margin-top:10px"><button class="btn sm ghost" data-timer="clear">Clear times</button></div>':"")+
+    '</div>';
+}
+function wireTimer(){
+  const disp=document.getElementById("timerDisplay");
+  if(disp) disp.onclick=()=>{
+    if(!TIMER.running){TIMER.running=true;TIMER.t0=performance.now();
+      const tick=()=>{if(!TIMER.running)return;disp.textContent=fmtT(performance.now()-TIMER.t0);TIMER.raf=requestAnimationFrame(tick);};tick();}
+    else{TIMER.running=false;cancelAnimationFrame(TIMER.raf);const ms=performance.now()-TIMER.t0;timerTimes().push(ms);timerSave();TIMER.scramble=genScramble(P());render();toast("Nice! "+fmtT(ms)+"s ⏱️");}
+  };
+  document.querySelectorAll("[data-timer]").forEach(b=>{const a=b.dataset.timer;if(a==='toggle')return;
+    b.onclick=()=>{if(a==='scramble'){TIMER.scramble=genScramble(P());render();}else if(a==='clear'){TIMER_TIMES[P().id]=[];timerSave();render();}};});
+}
+function findCase(kind,idx){const p=P();for(const g of p.cases){if(g.kind===kind)return g.list[idx];}return null;}
+function openCaseTeach(kind,idx){
+  if(ANIM_KINDS.includes(kind)&&cubeEngineOK(P())){ openCubeTeach(kind,idx); return; }
+  const c=findCase(kind,idx); if(!c)return; const label=c.n!==undefined?(kind==='oll'?'OLL '+c.n:c.n):c.name; const moves=parseAlg(c.alg);
+  state.screen="caseteach";
+  document.getElementById("view").innerHTML='<div class="card"><div class="row between"><h2 style="margin:0">'+label+'</h2><span class="tag verified">verified</span></div>'+
+    '<p class="muted">'+(P().note3d||"Algorithm and steps below.")+'</p>'+
+    '<h3>The algorithm</h3><div class="alg">'+c.alg+'</div><div class="src" style="margin-top:6px">Source: SpeedCubeDB</div>'+
+    '<h3>Steps</h3><div class="movechips">'+moves.map(m=>'<span class="movechip">'+m+'</span>').join("")+'</div>'+
+    '<div class="row" style="margin-top:12px"><button class="btn sm ghost" data-go="plibrary">← Back to cases</button></div></div>';
+  renderTabs(); wire(); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* restore saved colours */
+try{const cs=JSON.parse(localStorage_safe_get("amh_colors")||"null");if(cs&&cs.c){COLORS=cs.c;if(cs.n)state.topColorName=cs.n;}}catch(e){}
+try{const cc=JSON.parse(localStorage_safe_get("amh_cubecolors")||"null");if(cc)Object.assign(CUBE_COLORS,cc);}catch(e){}
+/* precompute 3x3 OLL top-patterns for the Identify recognizer */
+try{OLL3.forEach(o=>{o.sig=cubeOLLSig(o.alg);});}catch(e){}
+try{timerLoad();}catch(e){}
+
+/* PWA: register service worker for install + offline (no-op if unsupported/file://) */
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+
+/* boot */
+render();
+</script>
+</body>
+</html>

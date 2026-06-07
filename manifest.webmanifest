@@ -1,0 +1,14 @@
+{
+  "name": "CubeQuest",
+  "short_name": "CubeQuest",
+  "description": "Learn to solve twisty puzzles — Megaminx, 3x3, 4x4, Pyraminx, Mirror & Windmill — with real 3D, verified algorithms and a timer.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1226",
+  "theme_color": "#0f1226",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
