@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CubeQuest — by Adoni</title>
 <style>
   :root{
@@ -117,6 +117,34 @@
     .alg{background:#f3f3f3;color:#000;border:1px solid #bbb}
     a{color:#000}
   }
+  /* ===== Mobile-friendly (phones & small tablets) ===== */
+  html,body{max-width:100%;overflow-x:hidden}
+  img,canvas,svg,video{max-width:100%;height:auto}
+  /* puzzle picker: never overflow — adapts 1→2→3 columns by width */
+  .picker{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  /* notch / home-bar safe areas for installed (home-screen) app */
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  .wrap{padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(80px,env(safe-area-inset-bottom))}
+  @media(max-width:620px){
+    .wrap{padding-left:12px;padding-right:12px}
+    .logo h1{font-size:18px} .logo p{font-size:11.5px}
+    .logo .badge{width:40px;height:40px;font-size:20px}
+    header.top .pill{display:none}                 /* reclaim space on phones */
+    /* tabs become a single swipeable row instead of 5 stacked rows */
+    nav.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+      gap:6px;margin:0 -12px 12px;padding:2px 12px 8px;scrollbar-width:none}
+    nav.tabs::-webkit-scrollbar{display:none}
+    nav.tabs button{flex:0 0 auto;padding:9px 12px;font-size:13px}
+    .card{padding:15px 14px;border-radius:14px;margin-bottom:12px}
+    .card h2{font-size:18px} .card h3{font-size:14px}
+    .btn{padding:13px 14px;font-size:14px}
+    .big3 button{padding:16px 14px;font-size:15px}
+    .picker{grid-template-columns:repeat(2,1fr);gap:10px}
+    .picker .btn{flex-direction:column;align-items:flex-start;gap:2px;padding:14px 12px}
+    .picker .btn small{font-size:11px;opacity:.85}
+    .legend{gap:8px}
+  }
+  @media(max-width:380px){ .picker{grid-template-columns:1fr} }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
@@ -497,7 +525,7 @@ function scrHome(){
   <div class="card">
     <h2>Choose your puzzle 🧩</h2>
     <p class="muted">Pick a puzzle — the whole app switches to it. Every puzzle has a full 3D trainer.</p>
-    <div class="big3" style="grid-template-columns:repeat(3,1fr)">
+    <div class="big3 picker">
       <button class="btn" data-pick="megaminx">⬠ Megaminx <small>Full 3D trainer ✓</small></button>
       <button class="btn" data-pick="3x3">🟦 3×3 Cube <small>Full 3D trainer ✓</small></button>
       <button class="btn" data-pick="4x4">🟧 4×4 Cube <small>Full 3D trainer ✓</small></button>
