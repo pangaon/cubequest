@@ -1,5 +1,5 @@
 /* CubeQuest service worker — installable + offline (caches app shell + the 3D library) */
-const CACHE = "cubequest-v3";
+const CACHE = "cubequest-v4";
 const ASSETS = [
   "./",
   "./index.html",

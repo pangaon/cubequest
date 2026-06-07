@@ -145,6 +145,26 @@
     .legend{gap:8px}
   }
   @media(max-width:380px){ .picker{grid-template-columns:1fr} }
+  /* long algorithms must wrap, never clip off-screen */
+  .alg{overflow-wrap:anywhere;white-space:normal}
+  .grid>*{min-width:0}
+  /* fluid, square 3D viewer host (replaces fixed-px hosts) */
+  .host3d{width:min(360px,86vw);height:min(360px,86vw);margin:0 auto}
+  .mcCell{aspect-ratio:1/1;border:1px solid rgba(0,0,0,.35);border-radius:4px;cursor:pointer}
+  .mcGrid{display:grid;gap:3px;max-width:160px}
+  .mcPal{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .mcSw{width:34px;height:34px;border-radius:8px;border:2px solid #0c1030;cursor:pointer}
+  .mcSw.on{outline:3px solid var(--accent);outline-offset:1px}
+  .mcNet .mcFace{margin:4px}.mcLbl{font-size:11px;color:var(--muted);text-align:center}
+  .mcCube .mcRow{display:flex;gap:6px;justify-content:flex-start}
+  .mcCube .mcSpacer{flex:0 0 auto;width:0}
+  @media(max-width:620px){
+    .alg{font-size:14px;letter-spacing:0;word-spacing:1px}
+    .btn.sm{min-height:42px;padding:10px 13px;font-size:13px}
+    .movechip{min-height:38px;padding:9px 12px;font-size:14px}
+    .casecard .al{font-size:12px}
+    nav.tabs::after{content:"";position:sticky;right:0}
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
@@ -549,7 +569,7 @@ function megaHome(){ return `
           <button class="btn" data-go="builder">Identify My Case <small>Show me your puzzle, I'll help</small></button>
         </div>
       </div>
-      <div class="stage">${window.THREE?`<div id="mmxExplore" style="width:320px;height:320px;max-width:100%"></div>`:miniMegaminx(300)}</div>
+      <div class="stage">${window.THREE?`<div id="mmxExplore" class="host3d"></div>`:miniMegaminx(300)}</div>
     </div>
     ${window.THREE?`<p class="muted" style="text-align:center;font-size:12.5px;margin-top:2px">👆 Drag the puzzle to spin it around and see all 12 colours!</p>`:""}
     <h3>Your colours</h3>
@@ -577,7 +597,7 @@ function genericHome(){const p=P();const E=engineObj(p);
           <button class="btn" data-go="pident">Identify My Case <small>Show me your puzzle, I'll help</small></button>
         </div>
       </div>
-      <div class="stage">${E?`<div id="pHomeExplore" style="width:320px;height:320px;max-width:100%"></div>`:`<div style="font-size:90px;text-align:center">${p.icon}</div>`}</div>
+      <div class="stage">${E?`<div id="pHomeExplore" class="host3d"></div>`:`<div style="font-size:90px;text-align:center">${p.icon}</div>`}</div>
     </div>
     ${E?`<p class="muted" style="text-align:center;font-size:12.5px;margin-top:2px">👆 Drag the puzzle to spin it around!</p>`:`<p class="muted" style="text-align:center">A 3D model for the ${p.name} is coming soon.</p>`}
     ${colours?`<h3>Your colours</h3><div class="legend">${colours}</div>`:""}
@@ -600,7 +620,7 @@ function scrBasics(){
   ${window.THREE?`<div class="card">
     <h2>Spin the Megaminx 🧊</h2>
     <p class="muted">Drag the puzzle with your mouse or finger to turn it around. Every side is a pentagon, and you can see all 12 colours.</p>
-    <div class="stage"><div id="mmxExplore" style="width:360px;height:360px;max-width:100%"></div></div>
+    <div class="stage"><div id="mmxExplore" class="host3d"></div></div>
   </div>`:""}
   <div class="card">
     <h2>What is a Megaminx?</h2>
@@ -684,8 +704,9 @@ function scrBuilder(){
       <div class="face">🔎</div><div class="bubble">
       <b>Almost!</b> The top looks the same for a few cases that twist different ways.
       Look at the <b>sides</b> of your puzzle: which way does the ${state.topColorName} point on the twisted corners?
-      Candidates: ${m.list.map(c=>`<span class="tag adv">${c.id}</span>`).join(" ")}.
-      <br><span class="muted">I won't pick one for you until it's certain — open the Case Library to compare.</span></div></div>`;
+      Tap the one that matches yours and I'll teach it — watch the 3D and check it against your puzzle:
+      <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px">${m.list.map(c=>`<button class="btn sm" data-teach="${c.id}">${c.name} (${c.id}) →</button>`).join(" ")}</div>
+      <br><span class="muted">Not sure which? Open any one — if it doesn't match, come back and try the next.</span></div></div>`;
   } else {
     const c=m.list[0];
     result=`<div class="coach" style="border-color:#1f6b3f;background:linear-gradient(135deg,#123a24,#152a1f)">
@@ -795,7 +816,7 @@ function scrTeach(id){
         </div>
         <div class="stage" id="teachStage" style="min-height:340px;align-items:center">
           ${use3D
-            ? `<div id="mmx3dHost" style="width:340px;height:340px;max-width:100%"></div>`
+            ? `<div id="mmx3dHost" class="host3d"></div>`
             : renderLL({size:330,corners:d.corners,edges:d.edges})}
         </div>
         <p class="muted" style="text-align:center;font-size:12px">${use3D?"Drag the puzzle to look around. Watch the face spin as each move plays.":(threeOK?"Switch to 3D to watch the sides actually turn.":"3D needs internet the first time — diagram shown.")}</p>
@@ -1128,6 +1149,7 @@ function startPlayer(id){
 }
 function playerRenderStep(){
   const p=state.player; if(!p) return;
+  if(teach3DActive()) return; // never overwrite the live 3D canvas with the 2D fallback
   const c=teachOf(p.id); const d=decodeTop(c.top);
   // highlight current move's face; rotate top group a little for U moves to imply motion
   let hl=-1, rot=p.baseRot;
@@ -1552,7 +1574,7 @@ const CUBE3D = (function(){
   const FACE={R:{ax:'x',sg:1,s:-1},L:{ax:'x',sg:-1,s:1},U:{ax:'y',sg:1,s:-1},D:{ax:'y',sg:-1,s:1},
     F:{ax:'z',sg:1,s:-1},B:{ax:'z',sg:-1,s:1},M:{ax:'x',sg:0,s:1,sl:1},E:{ax:'y',sg:0,s:1,sl:1},S:{ax:'z',sg:0,s:-1,sl:1},
     X:{ax:'x',s:-1,all:1},Y:{ax:'y',s:-1,all:1},Z:{ax:'z',s:-1,all:1}};
-  function moveDef(tok){const m=tok.match(/^(\d*)([RLUDFBMESxyz])(w?)(2?)('?)$/);if(!m)return null;
+  function moveDef(tok){const m=tok.match(/^(\d*)([RLUDFBrludfbMESxyz])(w?)(2?)('?)$/);if(!m)return null;
     const num=m[1]?parseInt(m[1]):0,base=m[2],wide=m[3]==='w',dbl=m[4]==='2',prime=m[5]==="'";
     const up=base.toUpperCase(),f=FACE[up];if(!f)return null;const maxc=N-1;let layers=[];
     if(f.all){for(let c=-maxc;c<=maxc;c+=2)layers.push(c);}
@@ -1563,7 +1585,7 @@ const CUBE3D = (function(){
       else{layers=[f.sg*maxc];}}
     return {ax:f.ax,layers,q:(dbl?2:1)*(prime?-1:1)*f.s};}
   function parse(alg){return alg.trim().split(/\s+/).filter(Boolean);}
-  function inv(alg){return parse(alg).reverse().map(t=>{const m=t.match(/^(\d*[RLUDFBMESxyz]w?)(2?)('?)$/);return m?(m[1]+(m[2]?"2":(m[3]?"":"'"))):t;}).join(" ");}
+  function inv(alg){return parse(alg).reverse().map(t=>{const m=t.match(/^(\d*[RLUDFBrludfbMESxyz]w?)(2?)('?)$/);return m?(m[1]+(m[2]?"2":(m[3]?"":"'"))):t;}).join(" ");}
   function sticker(color,axis,sign,bd){let w,h,off;
     if(axis==='x'){w=bd[2];h=bd[1];off=bd[0]/2;}else if(axis==='y'){w=bd[0];h=bd[2];off=bd[1]/2;}else{w=bd[0];h=bd[1];off=bd[2]/2;}
     const g=new THREE.PlaneGeometry(w*0.86,h*0.86);
@@ -1728,7 +1750,7 @@ function scrCubeTeach(kind,i){const c=cubeCaseOf(kind,i);const moves=parseAlg(c.
     <div class="row between"><h2 style="margin:0">${c.name}</h2><span class="tag verified">verified</span></div>
     <div class="grid g2" style="align-items:start;margin-top:8px">
       <div>
-        <div class="stage" style="min-height:340px">${threeOK?`<div id="cube3dHost" style="width:340px;height:340px;max-width:100%"></div>`:`<p class="muted">3D needs internet the first time. Algorithm is on the right.</p>`}</div>
+        <div class="stage" style="min-height:340px">${threeOK?`<div id="cube3dHost" class="host3d"></div>`:`<p class="muted">3D needs internet the first time. Algorithm is on the right.</p>`}</div>
         <p class="muted" style="text-align:center;font-size:12px">${threeOK?"Drag to look around. Watch the cube turn as each move plays.":""}</p>
       </div>
       <div>
@@ -1889,7 +1911,7 @@ function scrPBasics(){const p=P();
   return '<div class="card"><h2>'+p.icon+' '+p.name+' — Basics</h2>'+
     (p.themeNote?'<div class="coach"><div class="face">💡</div><div class="bubble">'+p.themeNote+'</div></div>':'')+
     '<p style="margin-top:10px">'+p.basics+'</p>'+
-    (cubeEngineOK(p)?'<div class="stage"><div id="pExplore" style="width:320px;height:320px;max-width:100%"></div></div><p class="muted" style="text-align:center;font-size:12px">Drag to spin it around.</p>':
+    (cubeEngineOK(p)?'<div class="stage"><div id="pExplore" class="host3d"></div></div><p class="muted" style="text-align:center;font-size:12px">Drag to spin it around.</p>':
       (p.note3d?'<p class="muted">'+p.note3d+'</p>':''))+
     pieces+
     '<div class="row"><button class="btn sm" data-go="plibrary">See the cases →</button><button class="btn sm ghost" data-go="pnotation">Learn the moves</button><button class="btn sm ghost" data-go="psolve">Full solve</button></div></div>';
@@ -1898,7 +1920,7 @@ function scrPPlay(){const p=P();
   if(!cubeEngineOK(p)) return '<div class="card"><h2>🧊 3D Play — '+p.name+'</h2><p class="muted">'+(p.note3d||"A 3D model for this puzzle is coming soon.")+'</p><button class="btn sm" data-go="plibrary">Go to the cases →</button></div>';
   return '<div class="card"><h2>🧊 3D Play — '+p.name+'</h2>'+
     (p.themeNote?'<p class="muted">'+p.themeNote+'</p>':'')+
-    '<div class="stage"><div id="pPlayHost" style="width:360px;height:360px;max-width:100%"></div></div>'+
+    '<div class="stage"><div id="pPlayHost" class="host3d"></div></div>'+
     '<div class="row" style="justify-content:center"><button class="btn sm" data-pdemo="play">▶ Watch a demo solve</button><button class="btn sm ghost" data-pdemo="reset">↺ Reset</button></div>'+
     '<p class="muted" style="text-align:center;font-size:12px">Drag to look around. The demo plays a real algorithm so you can see the cube turn.</p></div>';
 }
