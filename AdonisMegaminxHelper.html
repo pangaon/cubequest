@@ -1609,30 +1609,34 @@ const PYRA3D = (function(){
   const LET={U:0,R:1,L:2,B:3};
   function parse(a){return a.trim().split(/\s+/).filter(Boolean);}
   function inv(a){return parse(a).reverse().map(t=>{const b=t.replace(/['2]/g,"");return b+(t.includes("'")?"":"'");}).join(" ");}
-  function pcCentroid(t,key){ if(t==='corner')return Vr[key]; if(t==='center')return scl(Vr[key],-1/3);
-    const [i,j]=(""+key).split("-").map(Number);return scl(add(Vr[i],Vr[j]),0.5); }
+  /* Faithful Pyraminx piece model: each vertex "corner" carries its tip AND its axial
+     (the inner triangle under the tip) on all 3 adjacent faces; 6 edges; NO free-floating
+     face-centre piece. A real Pyraminx turn rotates exactly: that corner + its 3 edges. */
   function buildGeom(){
     const faceList=[]; for(let k=0;k<4;k++){const others=[0,1,2,3].filter(x=>x!==k);faceList.push({omit:k,verts:others,color:COLS[k]});}
     const pieceMap={};
     faceList.forEach(f=>{
       const a=Vr[f.verts[0]],b=Vr[f.verts[1]],c=Vr[f.verts[2]];
+      const fc=scl(add(add(a,b),c),1/3);
       const G=(i,j)=>add(add(a,scl(sub(b,a),i/3)),scl(sub(c,a),j/3));
       const tris=[];
       for(let i=0;i<3;i++)for(let j=0;j<3-i;j++)tris.push([G(i,j),G(i+1,j),G(i,j+1)]);
       for(let i=0;i<2;i++)for(let j=0;j<2-i;j++)tris.push([G(i+1,j),G(i,j+1),G(i+1,j+1)]);
       const cands=[];
-      f.verts.forEach(vi=>cands.push({t:'corner',key:vi,c:pcCentroid('corner',vi)}));
-      for(let x=0;x<3;x++)for(let y=x+1;y<3;y++){const i=f.verts[x],j=f.verts[y];const key=Math.min(i,j)+"-"+Math.max(i,j);cands.push({t:'edge',key,c:pcCentroid('edge',key)});}
-      cands.push({t:'center',key:f.omit,c:pcCentroid('center',f.omit)});
+      f.verts.forEach(vi=>cands.push({t:'corner',key:vi,c:Vr[vi]}));                            // tip at the vertex
+      f.verts.forEach(vi=>cands.push({t:'corner',key:vi,c:add(scl(Vr[vi],0.5),scl(fc,0.5))}));  // axial -> SAME corner id
+      for(let x=0;x<3;x++)for(let y=x+1;y<3;y++){const i=f.verts[x],j=f.verts[y];const key=Math.min(i,j)+"-"+Math.max(i,j);cands.push({t:'edge',key,c:scl(add(Vr[i],Vr[j]),0.5)});}
       tris.forEach(tri=>{const cf=scl(add(add(tri[0],tri[1]),tri[2]),1/3);
         let best=cands[0],bd=1e9;cands.forEach(cd=>{const d=dist(cf,cd.c);if(d<bd){bd=d;best=cd;}});
-        const id=best.t+":"+best.key;if(!pieceMap[id])pieceMap[id]={t:best.t,key:best.key,pos:best.c.slice(),facelets:[]};
+        const id=best.t+":"+best.key;if(!pieceMap[id])pieceMap[id]={t:best.t,key:best.key,pos:[0,0,0],facelets:[]};
         pieceMap[id].facelets.push({color:f.color,tri});});
     });
-    return Object.values(pieceMap);
+    const arr=Object.values(pieceMap);
+    arr.forEach(p=>{let s=[0,0,0];p.facelets.forEach(f=>{s=add(s,scl(add(add(f.tri[0],f.tri[1]),f.tri[2]),1/3));});p.pos=scl(s,1/p.facelets.length);});
+    return arr;
   }
   function quatAxis(vi,ang){const n=Naxis[vi];return new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(n[0],n[1],n[2]),ang);}
-  function selOf(vi){return pieces.filter(p=>dot(nrm(p.pos),Naxis[vi])>0.1);}
+  function selOf(vi){return pieces.filter(p=>dot(nrm(p.pos),Naxis[vi])>0.4);}
   function rotVec(p,vi,ang){const n=Naxis[vi];const c=Math.cos(ang),s=Math.sin(ang);const kd=n[0]*p[0]+n[1]*p[1]+n[2]*p[2];
     const cr=[n[1]*p[2]-n[2]*p[1],n[2]*p[0]-n[0]*p[2],n[0]*p[1]-n[1]*p[0]];
     return [p[0]*c+cr[0]*s+n[0]*kd*(1-c),p[1]*c+cr[1]*s+n[1]*kd*(1-c),p[2]*c+cr[2]*s+n[2]*kd*(1-c)];}
